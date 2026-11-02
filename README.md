@@ -54,7 +54,21 @@ pola umum Indonesia (`3KT`, `LT 120`, `2.5M`, `SHM`, `Bintaro`, dst). Begitu
 3. Tambahkan foto → **Proses dengan AI**.
 4. Periksa/edit hasil yang sudah terisi otomatis → **Publish** (atau Simpan Draft).
 
-## 4. Deploy ke Vercel
+## 3b. Preview tampilan di GitHub Pages
+
+Repo ini sudah punya workflow (`.github/workflows/pages.yml`) yang mem-publish
+**preview statis situs publik** (beranda, cari, detail — dengan data contoh) ke
+GitHub Pages setiap push ke `main`.
+
+URL: **https://foriorid.github.io/future-pro/**
+
+> Aktifkan sekali di **Settings → Pages → Build and deployment → Source: GitHub Actions**.
+>
+> ⚠️ Pages hanya file statis, jadi **chat AI, login agen, upload foto, dan
+> listing dinamis tidak berfungsi di sini** — itu butuh server (lihat Vercel di
+> bawah). Pages hanya untuk melihat desain/tampilan.
+
+## 4. Deploy ke Vercel (aplikasi penuh)
 
 1. Push repo ini ke GitHub.
 2. Import di [vercel.com](https://vercel.com) → set semua env var dari `.env.example`.
