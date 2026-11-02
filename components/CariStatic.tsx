@@ -37,7 +37,7 @@ export function CariStatic({ listings }: { listings: Listing[] }) {
       <h1 className="text-xl font-bold">Cari Properti</h1>
 
       <div className="space-y-3">
-        <div className="flex items-center gap-2 rounded-xl bg-surface px-3 py-2.5 shadow-sm ring-1 ring-line">
+        <div className="glass flex items-center gap-2 rounded-2xl px-3.5 py-3">
           <IconSearch width={18} height={18} className="text-[color:var(--muted)]" />
           <input
             value={q}
@@ -47,7 +47,7 @@ export function CariStatic({ listings }: { listings: Listing[] }) {
           />
         </div>
 
-        <div className="flex rounded-xl bg-surface p-1 shadow-sm ring-1 ring-line">
+        <div className="glass flex rounded-full p-1">
           {([
             ["", "Semua"],
             ["jual", "Dijual"],
@@ -56,8 +56,8 @@ export function CariStatic({ listings }: { listings: Listing[] }) {
             <button
               key={val}
               onClick={() => setJenis(val)}
-              className={`flex-1 rounded-lg py-2 text-sm font-semibold transition ${
-                jenis === val ? "bg-brand-600 text-white shadow" : "text-[color:var(--muted)]"
+              className={`press flex-1 rounded-full py-2 text-sm font-semibold transition ${
+                jenis === val ? "bg-foreground text-background" : "text-[color:var(--muted)]"
               }`}
             >
               {label}
@@ -82,7 +82,7 @@ export function CariStatic({ listings }: { listings: Listing[] }) {
           {results.length} properti ditemukan
         </p>
         {results.length === 0 ? (
-          <div className="rounded-2xl bg-surface p-8 text-center text-sm text-[color:var(--muted)] ring-1 ring-line">
+          <div className="glass rounded-[26px] p-8 text-center text-sm text-[color:var(--muted)]">
             Tidak ada properti yang cocok. Coba ubah filter.
           </div>
         ) : (
@@ -109,8 +109,8 @@ function Chip({
   return (
     <button
       onClick={onClick}
-      className={`shrink-0 rounded-full px-3.5 py-1.5 text-sm font-medium transition ${
-        active ? "bg-brand-600 text-white" : "bg-surface text-[color:var(--muted)] ring-1 ring-line"
+      className={`press shrink-0 rounded-full px-3.5 py-1.5 text-sm font-medium transition ${
+        active ? "chip-active" : "chip"
       }`}
     >
       {children}

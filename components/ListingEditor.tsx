@@ -187,11 +187,12 @@ export function ListingEditor({ existing }: { existing?: Listing }) {
           <IconArrowLeft width={18} height={18} /> Kembali
         </button>
 
-        <div className="rounded-2xl bg-gradient-to-br from-brand-600 to-brand-800 p-4 text-white">
-          <div className="flex items-center gap-2 font-bold">
-            <IconSparkles width={20} height={20} /> Tulis seperti chat WA
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#141d30] to-[#070b16] p-4 text-white">
+          <div className="pointer-events-none absolute -right-8 -top-10 h-32 w-32 rounded-full bg-accent/30 blur-3xl" />
+          <div className="relative flex items-center gap-2 font-bold">
+            <IconSparkles width={20} height={20} className="text-accent" /> Tulis seperti chat WA
           </div>
-          <p className="mt-1 text-sm text-brand-100">
+          <p className="relative mt-1 text-sm text-white/70">
             Ketik detail properti dengan bahasa bebas, lalu AI akan merapikan
             jadi listing. Tambahkan foto juga ya.
           </p>
@@ -204,7 +205,7 @@ export function ListingEditor({ existing }: { existing?: Listing }) {
           placeholder={
             "Contoh:\nRumah dijual Bintaro sektor 9, 3KT 2KM, LT 120 LB 90, SHM, 2.5M nego, carport 2 mobil, dekat tol & sekolah"
           }
-          className="w-full rounded-2xl border border-line bg-surface p-4 text-sm leading-relaxed outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20"
+          className="glass w-full rounded-2xl p-4 text-sm leading-relaxed outline-none focus:ring-2 focus:ring-accent/30"
         />
 
         {/* Photo picker */}
@@ -221,7 +222,7 @@ export function ListingEditor({ existing }: { existing?: Listing }) {
           />
           <button
             onClick={() => fileInput.current?.click()}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-line bg-surface py-4 text-sm font-semibold text-[color:var(--muted)]"
+            className="press flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-line bg-surface/50 py-4 text-sm font-semibold text-[color:var(--muted)]"
           >
             <IconUpload width={20} height={20} />
             {pendingFiles.length > 0
@@ -252,7 +253,7 @@ export function ListingEditor({ existing }: { existing?: Listing }) {
           <button
             onClick={process}
             disabled={processing}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-600 py-3.5 text-base font-bold text-white shadow-lg shadow-brand-600/25 active:scale-[0.99] disabled:opacity-60"
+            className="btn-accent press flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-base font-bold disabled:opacity-60"
           >
             <IconSparkles width={20} height={20} />
             {processing ? "Memproses…" : "Proses dengan AI"}
@@ -369,7 +370,7 @@ export function ListingEditor({ existing }: { existing?: Listing }) {
             </select>
           </Field>
           <label className="flex items-end gap-2 pb-3 text-sm font-medium">
-            <input type="checkbox" checked={form.negotiable} onChange={(e) => set("negotiable", e.target.checked)} className="h-5 w-5 rounded accent-brand-600" />
+            <input type="checkbox" checked={form.negotiable} onChange={(e) => set("negotiable", e.target.checked)} className="h-5 w-5 rounded accent-accent" />
             Nego
           </label>
         </div>
@@ -425,19 +426,19 @@ export function ListingEditor({ existing }: { existing?: Listing }) {
       {error && <p className="text-sm font-medium text-red-600">{error}</p>}
 
       {/* Sticky save bar */}
-      <div className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-md border-t border-line bg-surface/95 p-3 backdrop-blur-lg pb-safe">
+      <div className="glass-strong fixed inset-x-0 bottom-0 z-40 mx-auto max-w-md p-3 pb-[max(12px,env(safe-area-inset-bottom))]">
         <div className="flex gap-2">
           <button
             onClick={() => save("draft")}
             disabled={saving}
-            className="flex-1 rounded-xl bg-slate-100 py-3 text-sm font-bold text-slate-700 disabled:opacity-60 dark:bg-slate-700 dark:text-slate-100"
+            className="press flex-1 rounded-full border border-line bg-surface/60 py-3 text-sm font-bold disabled:opacity-60"
           >
             Simpan Draft
           </button>
           <button
             onClick={() => save("published")}
             disabled={saving}
-            className="flex-[1.5] rounded-xl bg-brand-600 py-3 text-sm font-bold text-white disabled:opacity-60"
+            className="btn-accent press flex-[1.5] rounded-full py-3 text-sm font-bold disabled:opacity-60"
           >
             {saving ? "Menyimpan…" : editing ? "Simpan & Publish" : "Publish"}
           </button>
@@ -448,11 +449,11 @@ export function ListingEditor({ existing }: { existing?: Listing }) {
 }
 
 const inputCls =
-  "w-full rounded-xl border border-line bg-background px-3.5 py-2.5 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20";
+  "w-full rounded-xl border border-line bg-surface/60 px-3.5 py-2.5 text-sm outline-none focus:border-accent focus:ring-2 focus:ring-accent/30";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="space-y-3 rounded-2xl bg-surface p-4 shadow-sm ring-1 ring-line">
+    <section className="glass space-y-3 rounded-2xl p-4">
       <h2 className="text-sm font-bold">{title}</h2>
       {children}
     </section>
@@ -472,7 +473,7 @@ function Field({
     <label className="block">
       <span className="mb-1 block text-xs font-medium text-[color:var(--muted)]">{label}</span>
       {children}
-      {hint && <span className="mt-1 block text-xs text-brand-600 dark:text-brand-400">{hint}</span>}
+      {hint && <span className="mt-1 block text-xs font-medium text-[color:var(--foreground)]/70">{hint}</span>}
     </label>
   );
 }

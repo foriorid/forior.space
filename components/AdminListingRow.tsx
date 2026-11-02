@@ -33,7 +33,7 @@ export function AdminListingRow({ listing }: { listing: Listing }) {
   }
 
   return (
-    <div className="flex gap-3 rounded-2xl bg-surface p-3 shadow-sm ring-1 ring-line">
+    <div className="glass flex gap-3 rounded-2xl p-3">
       <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-slate-200">
         {listing.images[0] ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -61,7 +61,7 @@ export function AdminListingRow({ listing }: { listing: Listing }) {
           </span>
         </div>
         <h3 className="mt-1 line-clamp-1 text-sm font-semibold">{listing.title}</h3>
-        <div className="text-sm font-bold text-brand-700 dark:text-brand-300">
+        <div className="text-sm font-bold">
           {formatPrice(listing.price, listing.priceUnit)}
         </div>
 
@@ -79,7 +79,7 @@ export function AdminListingRow({ listing }: { listing: Listing }) {
           </button>
           <Link
             href={`/admin/edit/${listing.id}`}
-            className="flex items-center gap-1 rounded-lg bg-brand-50 px-2 py-1 text-xs font-semibold text-brand-700 dark:bg-brand-600/15 dark:text-brand-300"
+            className="chip flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold"
           >
             <IconEdit width={13} height={13} /> Edit
           </Link>

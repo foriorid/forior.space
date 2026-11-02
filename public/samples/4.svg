@@ -1,11 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
   <defs>
     <linearGradient id="g4" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#10b981"/>
-      <stop offset="1" stop-color="#065f46"/>
+      <stop offset="0" stop-color="#12241c"/>
+      <stop offset="1" stop-color="#0a0e17"/>
     </linearGradient>
   </defs>
   <rect width="800" height="600" fill="url(#g4)"/>
-  <text x="400" y="330" fill="#ffffff" opacity="0.95" font-family="system-ui,Arial" font-size="72" font-weight="700" text-anchor="middle">Tanah</text>
-  <text x="400" y="390" fill="#ffffff" opacity="0.7" font-family="system-ui,Arial" font-size="28" text-anchor="middle">Foto Properti</text>
+  <circle cx="650" cy="140" r="70" fill="#c2f24a" opacity="0.18"/>
+  <text x="400" y="320" fill="#c2f24a" font-family="system-ui,Arial" font-size="68" font-weight="700" text-anchor="middle">Tanah</text>
+  <text x="400" y="376" fill="#ffffff" opacity="0.6" font-family="system-ui,Arial" font-size="26" text-anchor="middle">Forior Space</text>
 </svg>

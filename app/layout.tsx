@@ -1,8 +1,15 @@
 import type { Metadata, Viewport } from "next";
+import { Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { site } from "@/lib/site";
 import { withBase } from "@/lib/asset";
 import { ServiceWorker } from "@/components/ServiceWorker";
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-space",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: {
@@ -13,7 +20,7 @@ export const metadata: Metadata = {
   manifest: withBase("/manifest.webmanifest"),
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
+    statusBarStyle: "black-translucent",
     title: site.name,
   },
   icons: {
@@ -24,8 +31,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#2563eb" },
-    { media: "(prefers-color-scheme: dark)", color: "#0b1120" },
+    { media: "(prefers-color-scheme: light)", color: "#eceef3" },
+    { media: "(prefers-color-scheme: dark)", color: "#070b16" },
   ],
   width: "device-width",
   initialScale: 1,
@@ -37,7 +44,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="id">
+    <html lang="id" className={spaceGrotesk.variable}>
       <body className="min-h-dvh antialiased">
         {children}
         <ServiceWorker />

@@ -30,7 +30,7 @@ export default async function AdminDashboard() {
 
       <Link
         href="/admin/new"
-        className="flex items-center justify-center gap-2 rounded-2xl bg-brand-600 py-4 text-base font-bold text-white shadow-lg shadow-brand-600/25 active:scale-[0.99]"
+        className="btn-accent press flex items-center justify-center gap-2 rounded-2xl py-4 text-base font-bold"
       >
         <IconSparkles width={22} height={22} />
         Tambah Listing via Chat
@@ -42,7 +42,7 @@ export default async function AdminDashboard() {
           SEMUA LISTING ({listings.length})
         </h2>
         {listings.length === 0 ? (
-          <div className="rounded-2xl bg-surface p-8 text-center text-sm text-[color:var(--muted)] ring-1 ring-line">
+          <div className="glass rounded-[26px] p-8 text-center text-sm text-[color:var(--muted)]">
             Belum ada listing. Klik tombol di atas untuk menambah.
           </div>
         ) : (
@@ -56,7 +56,7 @@ export default async function AdminDashboard() {
 
       <Link
         href="/admin/new"
-        className="fixed bottom-6 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-brand-600 text-white shadow-xl shadow-brand-600/30 active:scale-95 md:hidden"
+        className="btn-accent press fixed bottom-6 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full md:hidden"
         aria-label="Tambah listing"
       >
         <IconPlus width={28} height={28} />
@@ -67,8 +67,8 @@ export default async function AdminDashboard() {
 
 function Stat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-2xl bg-surface p-4 shadow-sm ring-1 ring-line">
-      <div className="text-2xl font-extrabold">{value}</div>
+    <div className="glass rounded-2xl p-4">
+      <div className="text-2xl font-bold">{value}</div>
       <div className="text-xs font-medium text-[color:var(--muted)]">{label}</div>
     </div>
   );

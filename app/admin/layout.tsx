@@ -15,8 +15,8 @@ export default async function AdminLayout({
 
   return (
     <div className="mx-auto min-h-dvh max-w-md bg-background">
-      <header className="sticky top-0 z-30 border-b border-line bg-surface/85 px-4 backdrop-blur-lg pt-safe">
-        <div className="flex h-14 items-center justify-between">
+      <header className="sticky top-0 z-30 px-4 pt-safe">
+        <div className="glass mt-3 flex h-14 items-center justify-between rounded-2xl px-3">
           <span className="text-lg font-extrabold">Dashboard Agen</span>
           <div className="flex items-center gap-1">
             <Link

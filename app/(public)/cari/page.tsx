@@ -45,7 +45,7 @@ export default async function SearchPage({
           {listings.length} properti ditemukan
         </p>
         {listings.length === 0 ? (
-          <div className="rounded-2xl bg-surface p-8 text-center text-sm text-[color:var(--muted)] ring-1 ring-line">
+          <div className="glass rounded-[26px] p-8 text-center text-sm text-[color:var(--muted)]">
             Tidak ada properti yang cocok. Coba ubah filter.
           </div>
         ) : (

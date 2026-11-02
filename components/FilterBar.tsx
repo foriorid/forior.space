@@ -42,7 +42,7 @@ export function FilterBar({ initial }: { initial: FilterValues }) {
   return (
     <div className="space-y-3">
       {/* Search box */}
-      <div className="flex items-center gap-2 rounded-xl bg-surface px-3 py-2.5 shadow-sm ring-1 ring-line">
+      <div className="glass flex items-center gap-2 rounded-2xl px-3.5 py-3">
         <IconSearch width={18} height={18} className="text-[color:var(--muted)]" />
         <input
           value={values.q}
@@ -53,7 +53,7 @@ export function FilterBar({ initial }: { initial: FilterValues }) {
       </div>
 
       {/* Jenis segmented */}
-      <div className="flex rounded-xl bg-surface p-1 shadow-sm ring-1 ring-line">
+      <div className="glass flex rounded-full p-1">
         {([
           ["", "Semua"],
           ["jual", "Dijual"],
@@ -62,10 +62,8 @@ export function FilterBar({ initial }: { initial: FilterValues }) {
           <button
             key={val}
             onClick={() => set({ jenis: val })}
-            className={`flex-1 rounded-lg py-2 text-sm font-semibold transition ${
-              values.jenis === val
-                ? "bg-brand-600 text-white shadow"
-                : "text-[color:var(--muted)]"
+            className={`press flex-1 rounded-full py-2 text-sm font-semibold transition ${
+              values.jenis === val ? "bg-foreground text-background" : "text-[color:var(--muted)]"
             }`}
           >
             {label}
@@ -100,10 +98,8 @@ function Chip({
   return (
     <button
       onClick={onClick}
-      className={`shrink-0 rounded-full px-3.5 py-1.5 text-sm font-medium transition ${
-        active
-          ? "bg-brand-600 text-white"
-          : "bg-surface text-[color:var(--muted)] ring-1 ring-line"
+      className={`press shrink-0 rounded-full px-3.5 py-1.5 text-sm font-medium transition ${
+        active ? "chip-active" : "chip"
       }`}
     >
       {children}

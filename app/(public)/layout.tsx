@@ -9,32 +9,32 @@ export default function PublicLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="mx-auto min-h-dvh max-w-md bg-background">
-      <header className="sticky top-0 z-30 border-b border-line bg-surface/85 px-4 backdrop-blur-lg pt-safe">
-        <div className="flex h-14 items-center justify-between">
+    <div className="mx-auto min-h-dvh max-w-md">
+      <header className="sticky top-0 z-30 px-4 pt-safe">
+        <div className="glass mt-3 flex h-14 items-center justify-between rounded-2xl px-3">
           <Link href="/" className="flex items-center gap-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={withBase("/icon.svg")} alt="" width={28} height={28} className="rounded-lg" />
-            <span className="text-lg font-extrabold tracking-tight">{site.name}</span>
+            <img src={withBase("/icon.svg")} alt="" width={30} height={30} className="rounded-xl" />
+            <span className="text-[17px] font-bold tracking-tight">{site.name}</span>
           </Link>
           {!IS_STATIC && (
             <Link
               href="/admin"
-              className="rounded-full bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-700 dark:bg-brand-600/15 dark:text-brand-300"
+              className="press rounded-full border border-line bg-surface/60 px-3.5 py-1.5 text-xs font-semibold"
             >
               Agen
             </Link>
           )}
         </div>
         {IS_STATIC && (
-          <div className="pb-2 text-[11px] leading-tight text-[color:var(--muted)]">
+          <div className="mt-2 px-1 text-[11px] leading-tight text-[color:var(--muted)]">
             Preview tampilan (data contoh). Fitur chat AI, login & upload aktif
             saat dijalankan dengan server — lihat README.
           </div>
         )}
       </header>
 
-      <main className="px-4 pb-28 pt-4">{children}</main>
+      <main className="px-4 pb-32 pt-4">{children}</main>
 
       <BottomNav />
     </div>

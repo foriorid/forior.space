@@ -47,7 +47,7 @@ function LoginForm() {
         </p>
       </div>
 
-      <form onSubmit={submit} className="space-y-4 rounded-2xl bg-surface p-5 shadow-sm ring-1 ring-line">
+      <form onSubmit={submit} className="glass space-y-4 rounded-[26px] p-5">
         <div>
           <label className="mb-1.5 block text-sm font-medium">Password Agen</label>
           <input
@@ -55,7 +55,7 @@ function LoginForm() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             autoFocus
-            className="w-full rounded-xl border border-line bg-background px-3.5 py-3 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20"
+            className="w-full rounded-xl border border-line bg-surface/60 px-3.5 py-3 text-sm outline-none focus:border-accent focus:ring-2 focus:ring-accent/30"
             placeholder="••••••••"
           />
         </div>
@@ -63,13 +63,13 @@ function LoginForm() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-xl bg-brand-600 py-3 text-sm font-bold text-white transition active:scale-[0.99] disabled:opacity-60"
+          className="btn-accent press w-full rounded-full py-3 text-sm font-bold transition disabled:opacity-60"
         >
           {loading ? "Memproses…" : "Masuk"}
         </button>
       </form>
 
-      <Link href="/" className="mt-6 text-center text-sm font-medium text-brand-600 dark:text-brand-400">
+      <Link href="/" className="mt-6 text-center text-sm font-medium text-[color:var(--muted)]">
         ← Kembali ke situs
       </Link>
     </div>

@@ -18,8 +18,8 @@ export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface/90 backdrop-blur-lg pb-safe">
-      <div className="mx-auto flex max-w-md items-stretch justify-around px-2">
+    <nav className="fixed inset-x-0 bottom-0 z-40 flex justify-center px-4 pb-[max(16px,env(safe-area-inset-bottom))]">
+      <div className="glass-strong flex items-center gap-1 rounded-full p-1.5">
         {tabs.map((tab) => {
           const active = tab.match(pathname);
           const Icon = tab.icon;
@@ -27,12 +27,15 @@ export function BottomNav() {
             <Link
               key={tab.href}
               href={tab.href}
-              className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium transition ${
-                active ? "text-brand-600 dark:text-brand-400" : "text-[color:var(--muted)]"
+              aria-label={tab.label}
+              className={`press flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition ${
+                active
+                  ? "bg-accent text-accent-ink shadow-[0_8px_20px_-8px_rgba(194,242,74,0.8)]"
+                  : "text-[color:var(--muted)]"
               }`}
             >
-              <Icon width={23} height={23} strokeWidth={active ? 2.4 : 2} />
-              {tab.label}
+              <Icon width={21} height={21} strokeWidth={active ? 2.4 : 2} />
+              {active && <span>{tab.label}</span>}
             </Link>
           );
         })}

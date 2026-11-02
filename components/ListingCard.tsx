@@ -12,9 +12,9 @@ export function ListingCard({ listing }: { listing: Listing }) {
   return (
     <Link
       href={`/listing/${listing.id}`}
-      className="group block overflow-hidden rounded-2xl bg-surface shadow-sm ring-1 ring-line transition active:scale-[0.99]"
+      className="press group block overflow-hidden rounded-[26px] glass"
     >
-      <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-200">
+      <div className="relative m-1.5 aspect-[16/11] overflow-hidden rounded-[20px] bg-slate-300/40">
         {cover ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -24,54 +24,43 @@ export function ListingCard({ listing }: { listing: Listing }) {
             className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center text-slate-400">
+          <div className="flex h-full w-full items-center justify-center text-[color:var(--muted)]">
             Tanpa foto
           </div>
         )}
-        <div className="absolute left-3 top-3 flex gap-2">
+
+        <div className="absolute left-2.5 top-2.5 flex gap-1.5">
           <span
-            className={`rounded-full px-2.5 py-1 text-xs font-semibold text-white shadow ${
-              isSewa ? "bg-emerald-600" : "bg-brand-600"
+            className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${
+              isSewa ? "bg-foreground text-background" : "bg-accent text-accent-ink"
             }`}
           >
             {isSewa ? "Disewa" : "Dijual"}
           </span>
-          <span className="rounded-full bg-black/55 px-2.5 py-1 text-xs font-medium text-white backdrop-blur">
+          <span className="rounded-full bg-black/40 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur-md">
             {PROPERTY_TYPE_LABELS[listing.propertyType]}
           </span>
         </div>
+
+        {/* Price glass pill */}
+        <div className="absolute bottom-2.5 left-2.5 rounded-full bg-black/45 px-3 py-1.5 text-sm font-bold text-white backdrop-blur-md">
+          {formatPrice(listing.price, listing.priceUnit)}
+          {listing.negotiable && <span className="ml-1 text-[11px] font-medium opacity-80">nego</span>}
+        </div>
       </div>
 
-      <div className="p-3.5">
-        <div className="text-lg font-bold text-brand-700 dark:text-brand-300">
-          {formatPrice(listing.price, listing.priceUnit)}
-          {listing.negotiable && (
-            <span className="ml-1.5 align-middle text-xs font-medium text-[color:var(--muted)]">
-              nego
-            </span>
-          )}
-        </div>
-        <h3 className="mt-1 line-clamp-2 text-[15px] font-semibold leading-snug">
-          {listing.title}
-        </h3>
-        <p className="mt-1 flex items-center gap-1 text-sm text-[color:var(--muted)]">
+      <div className="px-3.5 pb-3.5 pt-1.5">
+        <h3 className="line-clamp-1 text-[15px] font-bold leading-snug">{listing.title}</h3>
+        <p className="mt-1 flex items-center gap-1 text-[13px] text-[color:var(--muted)]">
           <IconPin width={14} height={14} className="shrink-0" />
           <span className="line-clamp-1">{locationLabel(listing) || "Lokasi"}</span>
         </p>
 
-        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-line pt-3 text-sm text-[color:var(--muted)]">
-          {listing.bedrooms != null && (
-            <Spec icon={<IconBed width={16} height={16} />} label={`${listing.bedrooms} KT`} />
-          )}
-          {listing.bathrooms != null && (
-            <Spec icon={<IconBath width={16} height={16} />} label={`${listing.bathrooms} KM`} />
-          )}
-          {listing.landArea != null && (
-            <Spec icon={<IconLand width={16} height={16} />} label={formatArea(listing.landArea)} />
-          )}
-          {listing.buildingArea != null && (
-            <Spec icon={<IconRuler width={16} height={16} />} label={formatArea(listing.buildingArea)} />
-          )}
+        <div className="no-scrollbar mt-2.5 flex gap-1.5 overflow-x-auto">
+          {listing.bedrooms != null && <Spec icon={<IconBed width={14} height={14} />} label={`${listing.bedrooms} KT`} />}
+          {listing.bathrooms != null && <Spec icon={<IconBath width={14} height={14} />} label={`${listing.bathrooms} KM`} />}
+          {listing.landArea != null && <Spec icon={<IconLand width={14} height={14} />} label={formatArea(listing.landArea)} />}
+          {listing.buildingArea != null && <Spec icon={<IconRuler width={14} height={14} />} label={formatArea(listing.buildingArea)} />}
         </div>
       </div>
     </Link>
@@ -80,7 +69,7 @@ export function ListingCard({ listing }: { listing: Listing }) {
 
 function Spec({ icon, label }: { icon: React.ReactNode; label: string }) {
   return (
-    <span className="inline-flex items-center gap-1.5">
+    <span className="chip inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium">
       {icon}
       {label}
     </span>
