@@ -74,22 +74,30 @@ URL: **https://foriorid.github.io/future-pro/**
 2. Import di [vercel.com](https://vercel.com) → set semua env var dari `.env.example`.
 3. Deploy.
 
-> ⚠️ **Penting soal penyimpanan:** versi MVP ini menyimpan data ke file di disk
-> (`data/`). Di Vercel (serverless) disk bersifat sementara, jadi untuk
-> **produksi** ganti lapisan penyimpanan ke database + object storage. Lihat bawah.
+> ⚠️ **Penting soal penyimpanan:** tanpa Supabase, data disimpan ke file disk
+> (`data/`) yang **tidak permanen** di Vercel (serverless). Untuk produksi, isi
+> env var Supabase (bagian 5) — integrasinya sudah siap, tinggal diaktifkan.
 
-## 5. Dari MVP ke produksi
+## 5. Penyimpanan permanen dengan Supabase (produksi)
 
-Arsitektur sudah dipisah supaya mudah di-upgrade:
+Integrasi Supabase **sudah tersedia** dan aktif otomatis begitu env var-nya diisi.
+Tanpa env var → app tetap pakai penyimpanan file lokal (mode coba-coba).
 
-| Bagian | Sekarang (MVP) | Rekomendasi produksi |
-|---|---|---|
-| Database listing | `data/listings.json` | **Supabase / Postgres** |
-| Penyimpanan foto | `data/uploads/` | **Supabase Storage / S3 / Cloudinary** |
-| Login agen | 1 password (env) | **Supabase Auth** |
+**Langkah:**
 
-Cukup tulis ulang **satu file**: `lib/store.ts` (CRUD listing + simpan/baca foto).
-Sisa aplikasi (UI, API, parsing) tidak perlu diubah.
+1. Buat akun & project gratis di [supabase.com](https://supabase.com).
+2. Di dashboard → **SQL Editor** → tempel isi `docs/supabase-schema.sql` → **Run**
+   (membuat tabel `listings`, `settings`, dan bucket storage `listings`).
+3. Ambil kredensial di **Project Settings → API**:
+   - `SUPABASE_URL` = Project URL
+   - `SUPABASE_SERVICE_ROLE_KEY` = **service_role** key (rahasia, server-side saja)
+4. Isi keduanya di `.env.local` (lokal) atau di Environment Variables Vercel.
+
+Begitu diisi, semua listing & foto tersimpan permanen di Supabase — tidak hilang
+saat redeploy. Login agen tetap pakai `ADMIN_PASSWORD` (cukup untuk satu agen).
+
+> Arsitektur terpisah: `lib/store.ts` otomatis memilih `lib/store-supabase.ts`
+> (Supabase) atau `lib/store-file.ts` (file). UI, API, dan parsing tidak berubah.
 
 ---
 
