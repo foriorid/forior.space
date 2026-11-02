@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { getListings } from "@/lib/store";
+import { getListings, getSettings } from "@/lib/store";
 import { AdminListingRow } from "@/components/AdminListingRow";
-import { IconPlus, IconSparkles } from "@/components/icons";
+import { IconPlus, IconSparkles, IconChevronRight, IconWhatsApp } from "@/components/icons";
 import { hasApiKey } from "@/lib/parse";
+import { toLocalPhone } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +11,7 @@ export default async function AdminDashboard() {
   const listings = await getListings({}); // all statuses
   const published = listings.filter((l) => l.status === "published").length;
   const drafts = listings.length - published;
+  const settings = await getSettings();
 
   return (
     <div className="space-y-5">
@@ -36,6 +38,24 @@ export default async function AdminDashboard() {
         Tambah Listing via Chat
       </Link>
 
+      {/* Settings quick row */}
+      <Link
+        href="/admin/pengaturan"
+        className="glass press flex items-center gap-3 rounded-2xl p-3.5"
+      >
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/18">
+          <IconWhatsApp width={20} height={20} />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="text-sm font-bold">{settings.agentName}</div>
+          <div className="text-xs text-[color:var(--muted)]">
+            WhatsApp: {toLocalPhone(settings.waNumber)}
+          </div>
+        </div>
+        <span className="text-xs font-semibold text-[color:var(--muted)]">Ubah</span>
+        <IconChevronRight width={16} height={16} className="text-[color:var(--muted)]" />
+      </Link>
+
       {/* List */}
       <div>
         <h2 className="mb-3 text-sm font-bold text-[color:var(--muted)]">
@@ -46,7 +66,7 @@ export default async function AdminDashboard() {
             Belum ada listing. Klik tombol di atas untuk menambah.
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {listings.map((l) => (
               <AdminListingRow key={l.id} listing={l} />
             ))}

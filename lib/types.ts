@@ -98,3 +98,10 @@ export const LISTING_TYPE_LABELS: Record<ListingType, string> = {
   jual: "Dijual",
   sewa: "Disewa",
 };
+
+/** Editable site/agent settings (managed from the admin settings page). */
+export interface Settings {
+  agentName: string;
+  /** WhatsApp number, stored in international digits, e.g. "6281379097488". */
+  waNumber: string;
+}

@@ -36,7 +36,7 @@ jobs:
           NEXT_PUBLIC_SITE_NAME: Forior Space
           NEXT_PUBLIC_SITE_TAGLINE: "Properti pilihan di Jakarta, Tangsel & sekitarnya"
           NEXT_PUBLIC_AGENT_NAME: Forior Space
-          NEXT_PUBLIC_WA_NUMBER: "6281234567890"
+          NEXT_PUBLIC_WA_NUMBER: "6281379097488"
         run: npm run build:pages
       - uses: actions/configure-pages@v5
         with:

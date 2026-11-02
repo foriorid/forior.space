@@ -9,8 +9,8 @@ export default function PublicLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="mx-auto min-h-dvh max-w-md">
-      <header className="sticky top-0 z-30 px-4 pt-safe">
+    <div className="mx-auto min-h-dvh w-full max-w-md md:max-w-3xl lg:max-w-5xl">
+      <header className="sticky top-0 z-30 px-4 pt-safe md:px-6">
         <div className="glass mt-3 flex h-14 items-center justify-between rounded-2xl px-3">
           <Link href="/" className="flex items-center gap-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -34,7 +34,7 @@ export default function PublicLayout({
         )}
       </header>
 
-      <main className="px-4 pb-32 pt-4">{children}</main>
+      <main className="px-4 pb-32 pt-4 md:px-6">{children}</main>
 
       <BottomNav />
     </div>

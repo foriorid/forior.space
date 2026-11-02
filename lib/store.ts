@@ -1,7 +1,13 @@
 import { promises as fs } from "fs";
 import path from "path";
 import { nanoid } from "nanoid";
-import type { Listing, ListingStatus, ListingType, PropertyType } from "./types";
+import type {
+  Listing,
+  ListingStatus,
+  ListingType,
+  PropertyType,
+  Settings,
+} from "./types";
 import { seedListings } from "./seed";
 
 /**
@@ -14,6 +20,7 @@ import { seedListings } from "./seed";
 const DATA_DIR = path.join(process.cwd(), "data");
 const DB_FILE = path.join(DATA_DIR, "listings.json");
 const UPLOAD_DIR = path.join(DATA_DIR, "uploads");
+const SETTINGS_FILE = path.join(DATA_DIR, "settings.json");
 
 // Serialize writes so concurrent requests don't corrupt the JSON file.
 let writeChain: Promise<unknown> = Promise.resolve();
@@ -128,6 +135,34 @@ export async function deleteListing(id: string): Promise<boolean> {
   if (next.length === items.length) return false;
   await writeAll(next);
   return true;
+}
+
+// ---- Settings ------------------------------------------------------------
+
+export function defaultSettings(): Settings {
+  return {
+    agentName: process.env.NEXT_PUBLIC_AGENT_NAME || "Forior Space",
+    waNumber: process.env.NEXT_PUBLIC_WA_NUMBER || "6281379097488",
+  };
+}
+
+export async function getSettings(): Promise<Settings> {
+  await ensureDirs();
+  try {
+    const raw = await fs.readFile(SETTINGS_FILE, "utf8");
+    return { ...defaultSettings(), ...(JSON.parse(raw) as Partial<Settings>) };
+  } catch {
+    return defaultSettings();
+  }
+}
+
+export async function updateSettings(patch: Partial<Settings>): Promise<Settings> {
+  await ensureDirs();
+  const next = { ...(await getSettings()), ...patch };
+  const tmp = SETTINGS_FILE + ".tmp";
+  await fs.writeFile(tmp, JSON.stringify(next, null, 2), "utf8");
+  await fs.rename(tmp, SETTINGS_FILE);
+  return next;
 }
 
 // ---- Image storage -------------------------------------------------------

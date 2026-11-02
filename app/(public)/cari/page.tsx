@@ -49,7 +49,7 @@ export default async function SearchPage({
             Tidak ada properti yang cocok. Coba ubah filter.
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {listings.map((l) => (
               <ListingCard key={l.id} listing={l} />
             ))}

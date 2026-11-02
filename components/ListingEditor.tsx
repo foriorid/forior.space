@@ -179,7 +179,7 @@ export function ListingEditor({ existing }: { existing?: Listing }) {
   // ---------- COMPOSE PHASE ----------
   if (phase === "compose") {
     return (
-      <div className="space-y-4">
+      <div className="mx-auto max-w-2xl space-y-4">
         <button
           onClick={() => router.push("/admin")}
           className="flex items-center gap-1 text-sm font-semibold text-[color:var(--muted)]"
@@ -271,7 +271,7 @@ export function ListingEditor({ existing }: { existing?: Listing }) {
 
   // ---------- FORM PHASE ----------
   return (
-    <div className="space-y-5 pb-28">
+    <div className="mx-auto max-w-2xl space-y-5 pb-28">
       {!editing && (
         <button
           onClick={() => setPhase("compose")}
@@ -426,7 +426,7 @@ export function ListingEditor({ existing }: { existing?: Listing }) {
       {error && <p className="text-sm font-medium text-red-600">{error}</p>}
 
       {/* Sticky save bar */}
-      <div className="glass-strong fixed inset-x-0 bottom-0 z-40 mx-auto max-w-md p-3 pb-[max(12px,env(safe-area-inset-bottom))]">
+      <div className="glass-strong fixed inset-x-0 bottom-0 z-40 mx-auto max-w-2xl p-3 pb-[max(12px,env(safe-area-inset-bottom))]">
         <div className="flex gap-2">
           <button
             onClick={() => save("draft")}
