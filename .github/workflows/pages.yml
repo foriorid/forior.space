@@ -33,9 +33,9 @@ jobs:
         env:
           NEXT_PUBLIC_STATIC: "1"
           NEXT_PUBLIC_BASE_PATH: /future-pro
-          NEXT_PUBLIC_SITE_NAME: Future Pro
+          NEXT_PUBLIC_SITE_NAME: Forior Space
           NEXT_PUBLIC_SITE_TAGLINE: "Properti pilihan di Jakarta, Tangsel & sekitarnya"
-          NEXT_PUBLIC_AGENT_NAME: Agen Future Pro
+          NEXT_PUBLIC_AGENT_NAME: Forior Space
           NEXT_PUBLIC_WA_NUMBER: "6281234567890"
         run: npm run build:pages
       - uses: actions/configure-pages@v5
