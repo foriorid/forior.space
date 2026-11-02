@@ -33,7 +33,15 @@ export function seedListings(): Listing[] {
       address: "Bintaro Sektor 9",
       city: "Tangerang Selatan",
       facilities: ["Dekat tol", "Carport 2 mobil", "Row jalan 2 mobil", "PAM"],
-      images: [{ id: "s1", url: "/samples/1.svg" }],
+      images: [
+        { id: "s1a", url: "/samples/1.svg" },
+        { id: "s1b", url: "/samples/2.svg" },
+        { id: "s1c", url: "/samples/3.svg" },
+        { id: "s1d", url: "/samples/4.svg" },
+        { id: "s1e", url: "/samples/2.svg" },
+        { id: "s1f", url: "/samples/3.svg" },
+        { id: "s1g", url: "/samples/4.svg" },
+      ],
       updatedAt: new Date(Date.now() - 1000).toISOString(),
     },
     {
