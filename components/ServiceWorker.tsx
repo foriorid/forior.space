@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { IS_STATIC } from "@/lib/asset";
 
 /** Registers the service worker so the site is installable & works offline. */
 export function ServiceWorker() {
@@ -8,7 +9,8 @@ export function ServiceWorker() {
     if (
       typeof window === "undefined" ||
       !("serviceWorker" in navigator) ||
-      process.env.NODE_ENV !== "production"
+      process.env.NODE_ENV !== "production" ||
+      IS_STATIC
     ) {
       return;
     }

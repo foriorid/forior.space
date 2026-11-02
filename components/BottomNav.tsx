@@ -3,12 +3,16 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { IconHome, IconSearch, IconUser } from "./icons";
+import { IS_STATIC } from "@/lib/asset";
 
-const tabs = [
+const allTabs = [
   { href: "/", label: "Beranda", icon: IconHome, match: (p: string) => p === "/" },
   { href: "/cari", label: "Cari", icon: IconSearch, match: (p: string) => p.startsWith("/cari") },
   { href: "/admin", label: "Agen", icon: IconUser, match: (p: string) => p.startsWith("/admin") },
 ];
+
+// The static GitHub Pages preview has no server, so hide the Agen tab there.
+const tabs = IS_STATIC ? allTabs.filter((t) => t.href !== "/admin") : allTabs;
 
 export function BottomNav() {
   const pathname = usePathname();

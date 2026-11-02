@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Listing } from "@/lib/types";
 import { PROPERTY_TYPE_LABELS } from "@/lib/types";
 import { formatPrice, formatArea, locationLabel } from "@/lib/format";
+import { withBase } from "@/lib/asset";
 import { IconBed, IconBath, IconRuler, IconLand, IconPin } from "./icons";
 
 export function ListingCard({ listing }: { listing: Listing }) {
@@ -17,7 +18,7 @@ export function ListingCard({ listing }: { listing: Listing }) {
         {cover ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={cover}
+            src={withBase(cover)}
             alt={listing.title}
             loading="lazy"
             className="h-full w-full object-cover transition duration-500 group-hover:scale-105"

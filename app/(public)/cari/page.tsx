@@ -1,6 +1,8 @@
 import { getListings, type ListingFilter } from "@/lib/store";
 import { ListingCard } from "@/components/ListingCard";
 import { FilterBar, type FilterValues } from "@/components/FilterBar";
+import { CariStatic } from "@/components/CariStatic";
+import { IS_STATIC } from "@/lib/asset";
 import type { ListingType, PropertyType } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -10,6 +12,12 @@ export default async function SearchPage({
 }: {
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
+  // Static GitHub Pages preview: no server, filter on the client instead.
+  if (IS_STATIC) {
+    const all = await getListings({ status: "published" });
+    return <CariStatic listings={all} />;
+  }
+
   const sp = await searchParams;
 
   const initial: FilterValues = {
