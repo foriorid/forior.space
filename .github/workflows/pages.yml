@@ -1,0 +1,54 @@
+name: Deploy preview to GitHub Pages
+
+# Builds a STATIC preview of the public site (browsing UI + sample data) and
+# publishes it to GitHub Pages. Note: the full app (chat → AI parsing, login,
+# uploads, live listings) needs a server and does NOT run on Pages — deploy to
+# a Node host like Vercel for the complete experience.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - name: Build static export
+        env:
+          NEXT_PUBLIC_STATIC: "1"
+          NEXT_PUBLIC_BASE_PATH: /future-pro
+          NEXT_PUBLIC_SITE_NAME: Future Pro
+          NEXT_PUBLIC_SITE_TAGLINE: "Properti pilihan di Jakarta, Tangsel & sekitarnya"
+          NEXT_PUBLIC_AGENT_NAME: Agen Future Pro
+          NEXT_PUBLIC_WA_NUMBER: "6281234567890"
+        run: npm run build:pages
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: out
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
-    "start": "next start"
+    "start": "next start",
+    "build:pages": "node scripts/prepare-static.mjs && next build && node scripts/finish-static.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.3.0",

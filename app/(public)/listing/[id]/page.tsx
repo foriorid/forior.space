@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { getListing } from "@/lib/store";
+import { getListing, getListings } from "@/lib/store";
 import { isAuthed } from "@/lib/guard";
+import { IS_STATIC } from "@/lib/asset";
 import { PhotoCarousel } from "@/components/PhotoCarousel";
 import {
   IconArrowLeft,
@@ -20,6 +21,13 @@ import { PROPERTY_TYPE_LABELS, LISTING_TYPE_LABELS } from "@/lib/types";
 import { site, waLink } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
+
+// Pre-render published listings when building the static GitHub Pages preview.
+export async function generateStaticParams() {
+  if (process.env.NEXT_PUBLIC_STATIC !== "1") return [];
+  const items = await getListings({ status: "published" });
+  return items.map((l) => ({ id: l.id }));
+}
 
 export async function generateMetadata({
   params,
@@ -59,7 +67,7 @@ export default async function ListingDetail({
 }) {
   const { id } = await params;
   const listing = await getListing(id);
-  const authed = await isAuthed();
+  const authed = IS_STATIC ? false : await isAuthed();
 
   if (!listing || (listing.status !== "published" && !authed)) notFound();
 

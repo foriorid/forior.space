@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { site } from "@/lib/site";
+import { withBase } from "@/lib/asset";
 import { ServiceWorker } from "@/components/ServiceWorker";
 
 export const metadata: Metadata = {
@@ -9,15 +10,15 @@ export const metadata: Metadata = {
     template: `%s — ${site.name}`,
   },
   description: site.tagline,
-  manifest: "/manifest.webmanifest",
+  manifest: withBase("/manifest.webmanifest"),
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: site.name,
   },
   icons: {
-    icon: "/icon.svg",
-    apple: "/icon-192.png",
+    icon: withBase("/icon.svg"),
+    apple: withBase("/icon-192.png"),
   },
 };
 

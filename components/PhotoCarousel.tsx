@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { withBase } from "@/lib/asset";
 
 export function PhotoCarousel({
   images,
@@ -38,7 +39,7 @@ export function PhotoCarousel({
           // eslint-disable-next-line @next/next/no-img-element
           <img
             key={i}
-            src={img.url}
+            src={withBase(img.url)}
             alt={`${title} — foto ${i + 1}`}
             className="h-full w-full shrink-0 snap-center object-cover"
           />
