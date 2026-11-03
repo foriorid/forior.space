@@ -196,20 +196,32 @@ function parsePriceId(text: string): { price: number | null; unit: "total" | "pe
       ? "per_tahun"
       : "total";
 
-  // miliar
-  let m = lower.match(/(?:rp\s*)?(\d+(?:[.,]\d+)?)\s*(m|miliar|milyar)\b/);
-  if (m) return { price: Math.round(parseFloat(m[1].replace(",", ".")) * 1_000_000_000), unit };
-  // juta
-  m = lower.match(/(?:rp\s*)?(\d+(?:[.,]\d+)?)\s*(jt|juta)\b/);
-  if (m) return { price: Math.round(parseFloat(m[1].replace(",", ".")) * 1_000_000), unit };
-  // ribu
-  m = lower.match(/(?:rp\s*)?(\d+(?:[.,]\d+)?)\s*(rb|ribu)\b/);
-  if (m) return { price: Math.round(parseFloat(m[1].replace(",", ".")) * 1_000), unit };
-  // plain Rp with separators
-  m = lower.match(/rp\s*([\d.,]{6,})/);
-  if (m) {
-    const n = parseInt(m[1].replace(/[.,]/g, ""), 10);
-    if (!Number.isNaN(n)) return { price: n, unit };
+  // For unit-suffixed amounts ("2.5 M", "1,39 M") the separator is a decimal.
+  const toNum = (s: string) => parseFloat(s.replace(",", "."));
+
+  // Search near the word "harga" first, then the whole text — avoids grabbing
+  // random numbers like "72 m²" (land area) as the price.
+  const scopes: string[] = [];
+  const hIdx = lower.search(/harga/);
+  if (hIdx >= 0) scopes.push(lower.slice(hIdx, hIdx + 40));
+  scopes.push(lower);
+
+  for (const s of scopes) {
+    // miliar: "1,39 M", "2.5 miliar" — but NOT "72 m²" / "96m2" / "meter"
+    let m = s.match(/(?:rp\s*)?(\d+(?:[.,]\d+)?)\s*(?:miliar|milyar|m(?![a-z²2]))/);
+    if (m) return { price: Math.round(toNum(m[1]) * 1_000_000_000), unit };
+    // juta
+    m = s.match(/(?:rp\s*)?(\d+(?:[.,]\d+)?)\s*(?:juta|jt)(?![a-z])/);
+    if (m) return { price: Math.round(toNum(m[1]) * 1_000_000), unit };
+    // ribu
+    m = s.match(/(?:rp\s*)?(\d+(?:[.,]\d+)?)\s*(?:ribu|rb)(?![a-z])/);
+    if (m) return { price: Math.round(toNum(m[1]) * 1_000), unit };
+    // plain Rp with separators, e.g. "Rp 1.390.000.000"
+    m = s.match(/rp\s*([\d.]{6,})/);
+    if (m) {
+      const n = parseInt(m[1].replace(/[.]/g, ""), 10);
+      if (!Number.isNaN(n)) return { price: n, unit };
+    }
   }
   return { price: null, unit };
 }
@@ -248,13 +260,23 @@ export function fallbackParse(message: string): ParsedListing {
 
   const listingType = /sewa|disewa|dikontrak|kontrakan|rent/.test(lower) ? "sewa" : "jual";
 
-  let propertyType: ParsedListing["propertyType"] = "rumah";
-  if (/apart|apartemen|condo|unit\s/.test(lower)) propertyType = "apartemen";
-  else if (/ruko|rukan/.test(lower)) propertyType = "ruko";
-  else if (/\btanah\b|kavling|kaveling/.test(lower)) propertyType = "tanah";
-  else if (/gudang|warehouse/.test(lower)) propertyType = "gudang";
-  else if (/kost|kos-kosan|kosan/.test(lower)) propertyType = "kost";
-  else if (/villa|vila/.test(lower)) propertyType = "villa";
+  // Detect property type. "tanah" must NOT be triggered by the spec label
+  // "luas tanah", and the opening line is the strongest signal.
+  const detectType = (s: string): ParsedListing["propertyType"] | null => {
+    if (/apartemen|\bapart\b|\bapt\b|condo/.test(s)) return "apartemen";
+    if (/ruko|rukan/.test(s)) return "ruko";
+    if (/gudang|warehouse/.test(s)) return "gudang";
+    if (/\bvill?a\b|\bvila\b/.test(s)) return "villa";
+    if (/\bkost?\b|kos-kosan|kosan/.test(s)) return "kost";
+    if (/\brumah\b/.test(s)) return "rumah";
+    if (/kavling|kaveling|tanah kosong|(?:jual|dijual|sewa|disewa)\s+tanah|sebidang tanah/.test(s))
+      return "tanah";
+    return null;
+  };
+  const head = lower.slice(0, 90); // opening usually states the type
+  const bodyNoLuas = lower.replace(/luas\s+tanah/g, " ");
+  const propertyType: ParsedListing["propertyType"] =
+    detectType(head) ?? detectType(bodyNoLuas) ?? "rumah";
 
   const { price, unit } = parsePriceId(text);
 
