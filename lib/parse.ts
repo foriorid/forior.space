@@ -219,6 +219,29 @@ function num(re: RegExp, text: string): number | null {
   return m ? parseInt(m[1], 10) : null;
 }
 
+const NUMPAT = "(\\d+(?:[.,]\\d+)?)";
+
+/** Match a number BEFORE a label, e.g. "2 lantai". */
+function numAfter(text: string, pattern: string): number | null {
+  const m = text.match(new RegExp(pattern, "i"));
+  return m ? Math.round(parseFloat(m[1].replace(",", "."))) : null;
+}
+
+/**
+ * Extract a number tied to a label, in either order:
+ *   "Kamar Tidur : 3", "KT: 3", "3 kamar tidur", "3KT"
+ * asInt=false keeps decimals (for areas like 44.7).
+ */
+function extractNum(text: string, labelRe: string, asInt = true): number | null {
+  const after = text.match(new RegExp(`(?:${labelRe})\\s*[:=\\-/]*\\s*${NUMPAT}`, "i"));
+  const before = text.match(new RegExp(`${NUMPAT}\\s*(?:${labelRe})`, "i"));
+  const raw = after?.[1] ?? before?.[1];
+  if (raw == null) return null;
+  const v = parseFloat(raw.replace(",", "."));
+  if (Number.isNaN(v)) return null;
+  return asInt ? Math.round(v) : v;
+}
+
 export function fallbackParse(message: string): ParsedListing {
   const text = message.trim();
   const lower = text.toLowerCase();
@@ -235,12 +258,19 @@ export function fallbackParse(message: string): ParsedListing {
 
   const { price, unit } = parsePriceId(text);
 
-  const bedrooms = num(/(\d+)\s*(?:kt|kamar tidur|bedroom|br)\b/i, lower);
-  const bathrooms = num(/(\d+)\s*(?:km|kamar mandi|bathroom|ba)\b/i, lower);
-  const landArea = num(/(?:lt|luas tanah)\s*[:=]?\s*(\d+)/i, lower);
-  const buildingArea = num(/(?:lb|luas bangunan)\s*[:=]?\s*(\d+)/i, lower);
-  const floors = num(/(\d+)\s*(?:lantai|lt\b|tingkat)/i, lower);
-  const carports = num(/(?:carport|garasi)\s*(\d+)|(\d+)\s*(?:mobil|carport)/i, lower);
+  // Handles both "3 KT" and "Kamar Tidur : 3" / "Jumlah Kamar Tidur: 1 (satu)".
+  const bedrooms = extractNum(lower, "kamar tidur|bed\\s?room|\\bkt\\b|\\bbr\\b");
+  const bathrooms = extractNum(lower, "kamar mandi|bath\\s?room|\\bkm\\b");
+  const landArea = extractNum(lower, "luas tanah|\\blt\\b", false);
+  const buildingArea = extractNum(
+    lower,
+    "luas bangunan|luas unit|luas apartemen|luas apt|\\blb\\b",
+    false,
+  );
+  const floors =
+    extractNum(lower, "jumlah lantai", true) ??
+    numAfter(lower, "(\\d+)\\s*(?:lantai|tingkat)");
+  const carports = extractNum(lower, "carport|garasi|garage|mobil");
 
   let certificate: ParsedListing["certificate"] = "";
   if (/shm/i.test(text)) certificate = "SHM";

@@ -66,12 +66,14 @@ export default async function ListingDetail({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const listing = await getListing(id);
-  const authed = IS_STATIC ? false : await isAuthed();
+  // Run the backend reads in parallel to cut page latency.
+  const [listing, authed, settings] = await Promise.all([
+    getListing(id),
+    IS_STATIC ? Promise.resolve(false) : isAuthed(),
+    getSettings(),
+  ]);
 
   if (!listing || (listing.status !== "published" && !authed)) notFound();
-
-  const settings = await getSettings();
   const agentName = settings.agentName;
   const phoneLocal = toLocalPhone(settings.waNumber);
 

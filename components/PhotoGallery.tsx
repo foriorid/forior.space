@@ -63,10 +63,10 @@ export function PhotoGallery({
             )}
           </button>
         ) : (
-          <div className="grid h-[440px] grid-cols-2 gap-2">
+          <div className="flex h-[440px] gap-2">
             <button
               onClick={() => openAt(0)}
-              className="group overflow-hidden rounded-2xl bg-slate-300/40"
+              className="group h-full flex-1 overflow-hidden rounded-2xl bg-slate-300/40"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -75,7 +75,11 @@ export function PhotoGallery({
                 className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
               />
             </button>
-            <div className="grid grid-cols-2 grid-rows-2 gap-2">
+            <div
+              className={`grid h-full flex-1 gap-2 ${
+                right.length === 1 ? "grid-cols-1" : "grid-cols-2 grid-rows-2"
+              }`}
+            >
               {right.map((img, i) => {
                 const idx = i + 1;
                 const isLastVisible = i === right.length - 1;
