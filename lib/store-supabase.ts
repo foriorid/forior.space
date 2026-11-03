@@ -153,10 +153,15 @@ export async function saveImage(
   const sb = getSupabaseAdmin();
   const ext = EXT_BY_MIME[mime] ?? "jpg";
   const id = `${nanoid(12)}.${ext}`;
+  // Upload as a Blob so supabase-js uses the multipart path (reliable on Node).
+  const blob = new Blob([new Uint8Array(buffer)], { type: mime });
   const { error } = await sb.storage
     .from(IMAGE_BUCKET)
-    .upload(id, buffer, { contentType: mime, upsert: false });
-  if (error) throw error;
+    .upload(id, blob, { contentType: mime, upsert: false });
+  if (error) {
+    console.error("[store-supabase] saveImage upload failed:", error);
+    throw new Error(`Upload gagal: ${error.message}`);
+  }
   const { data } = sb.storage.from(IMAGE_BUCKET).getPublicUrl(id);
   return { id, url: data.publicUrl };
 }
