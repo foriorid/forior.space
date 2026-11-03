@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidateTag, revalidatePath } from "next/cache";
 import { requireAdmin, isAuthed } from "@/lib/guard";
 import { getListings, createListing, type ListingFilter } from "@/lib/store";
 import { listingInputSchema } from "@/lib/validate";
@@ -43,5 +44,8 @@ export async function POST(req: Request) {
   }
 
   const listing = await createListing(result.data);
+  revalidateTag("listings");
+  revalidatePath("/");
+  revalidatePath("/cari");
   return NextResponse.json({ listing }, { status: 201 });
 }

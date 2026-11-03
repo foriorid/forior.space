@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { requireAdmin } from "@/lib/guard";
 import { getSettings, updateSettings } from "@/lib/store";
 import { toWaInternational } from "@/lib/site";
@@ -29,5 +30,6 @@ export async function PUT(req: Request) {
   }
 
   const settings = await updateSettings(patch);
+  revalidateTag("settings");
   return NextResponse.json({ settings });
 }

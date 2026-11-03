@@ -5,7 +5,8 @@ import { IconSearch } from "@/components/icons";
 import { site } from "@/lib/site";
 import { PROPERTY_TYPE_LABELS, type PropertyType } from "@/lib/types";
 
-export const dynamic = "force-dynamic";
+// Cached/edge-served; refreshed on write via revalidatePath("/").
+export const revalidate = 60;
 
 const CATEGORIES: { type: PropertyType; emoji: string }[] = [
   { type: "rumah", emoji: "🏡" },

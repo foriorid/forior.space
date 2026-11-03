@@ -1,6 +1,14 @@
 import { NextResponse } from "next/server";
+import { revalidateTag, revalidatePath } from "next/cache";
 import { requireAdmin, isAuthed } from "@/lib/guard";
 import { getListing, updateListing, deleteListing } from "@/lib/store";
+
+function revalidateListing(id: string) {
+  revalidateTag("listings");
+  revalidatePath("/");
+  revalidatePath("/cari");
+  revalidatePath(`/listing/${id}`);
+}
 import { listingInputSchema } from "@/lib/validate";
 
 export const runtime = "nodejs";
@@ -42,6 +50,7 @@ export async function PUT(
   if (!listing) {
     return NextResponse.json({ error: "Tidak ditemukan" }, { status: 404 });
   }
+  revalidateListing(id);
   return NextResponse.json({ listing });
 }
 
@@ -57,5 +66,6 @@ export async function DELETE(
   if (!ok) {
     return NextResponse.json({ error: "Tidak ditemukan" }, { status: 404 });
   }
+  revalidateListing(id);
   return NextResponse.json({ ok: true });
 }
