@@ -38,20 +38,31 @@ function applyFilters(items: Listing[], filter: ListingFilter): Listing[] {
 }
 
 export async function getListings(filter: ListingFilter = {}): Promise<Listing[]> {
-  const sb = getSupabaseAdmin();
-  let query = sb.from(TABLE).select("doc").order("updated_at", { ascending: false });
-  if (filter.status) query = query.eq("status", filter.status);
-  const { data, error } = await query;
-  if (error) throw error;
-  const items = (data ?? []).map((r) => (r as { doc: Listing }).doc);
-  return applyFilters(items, filter);
+  try {
+    const sb = getSupabaseAdmin();
+    let query = sb.from(TABLE).select("doc").order("updated_at", { ascending: false });
+    if (filter.status) query = query.eq("status", filter.status);
+    const { data, error } = await query;
+    if (error) throw error;
+    const items = (data ?? []).map((r) => (r as { doc: Listing }).doc);
+    return applyFilters(items, filter);
+  } catch (err) {
+    // Don't let a Supabase/config error crash public pages — show empty instead.
+    console.error("[store-supabase] getListings failed:", err);
+    return [];
+  }
 }
 
 export async function getListing(id: string): Promise<Listing | null> {
-  const sb = getSupabaseAdmin();
-  const { data, error } = await sb.from(TABLE).select("doc").eq("id", id).maybeSingle();
-  if (error) throw error;
-  return data ? (data as { doc: Listing }).doc : null;
+  try {
+    const sb = getSupabaseAdmin();
+    const { data, error } = await sb.from(TABLE).select("doc").eq("id", id).maybeSingle();
+    if (error) throw error;
+    return data ? (data as { doc: Listing }).doc : null;
+  } catch (err) {
+    console.error("[store-supabase] getListing failed:", err);
+    return null;
+  }
 }
 
 export async function createListing(
@@ -109,15 +120,20 @@ export function defaultSettings(): Settings {
 }
 
 export async function getSettings(): Promise<Settings> {
-  const sb = getSupabaseAdmin();
-  const { data, error } = await sb
-    .from(SETTINGS_TABLE)
-    .select("data")
-    .eq("id", SETTINGS_ID)
-    .maybeSingle();
-  if (error) throw error;
-  const stored = (data as { data: Partial<Settings> } | null)?.data ?? {};
-  return { ...defaultSettings(), ...stored };
+  try {
+    const sb = getSupabaseAdmin();
+    const { data, error } = await sb
+      .from(SETTINGS_TABLE)
+      .select("data")
+      .eq("id", SETTINGS_ID)
+      .maybeSingle();
+    if (error) throw error;
+    const stored = (data as { data: Partial<Settings> } | null)?.data ?? {};
+    return { ...defaultSettings(), ...stored };
+  } catch (err) {
+    console.error("[store-supabase] getSettings failed:", err);
+    return defaultSettings();
+  }
 }
 
 export async function updateSettings(patch: Partial<Settings>): Promise<Settings> {
