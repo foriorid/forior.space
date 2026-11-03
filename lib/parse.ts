@@ -1,6 +1,22 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import type { ParsedListing } from "./types";
+import { PROPERTY_TYPE_LABELS } from "./types";
+
+/** Title Case helper (EYD-friendly): capitalise each significant word. */
+function titleCase(s: string): string {
+  const small = new Set(["di", "dan", "yang", "untuk", "ke", "dari", "pada"]);
+  return s
+    .replace(/\s+/g, " ")
+    .trim()
+    .split(" ")
+    .map((w, i) =>
+      i > 0 && small.has(w.toLowerCase())
+        ? w.toLowerCase()
+        : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase(),
+    )
+    .join(" ");
+}
 
 /**
  * Turns a free-text, WhatsApp-style message (plus optional photos) into a
@@ -59,7 +75,15 @@ Tugasmu: membaca pesan bebas dari agen (gaya chat WhatsApp) beserta foto (jika a
 Keluarkan HANYA objek JSON valid (tanpa markdown, tanpa penjelasan) dengan field berikut:
 - listingType: "jual" atau "sewa"
 - propertyType: salah satu dari "rumah" | "apartemen" | "ruko" | "tanah" | "gudang" | "kost" | "villa" | "lainnya"
-- title: judul singkat & menarik (maks ~70 karakter), contoh "Rumah Modern 2 Lantai di Bintaro Sektor 9"
+- title: judul listing yang rapi mengikuti pola:
+    [Jenis Properti] + [Tipe] + [Unik Poin] + "di" [Lokasi] + [Hot Offering]
+  Urutan Tipe & Unik Poin boleh ditukar agar natural. Contoh yang benar:
+    "Apartemen 2 Bedroom Furnished di Antasari Place Murah"
+    "Rumah Mewah 2 Lantai di Jati Padang Siap Huni"
+  Aturan penulisan: pakai Title Case (huruf besar di awal tiap kata penting),
+  ejaan baku/EYD, spasi rapi (satu spasi), JANGAN ALL CAPS, maksimal ~70 karakter.
+  Hanya masukkan komponen yang memang diketahui dari pesan — jangan mengarang.
+  Contoh Hot Offering: "Murah", "Nego", "Siap Huni", "Harga BU", "Dekat MRT".
 - description: deskripsi rapi 2-4 kalimat, enak dibaca calon pembeli, rangkum poin penting dari pesan
 - price: harga dalam Rupiah sebagai ANGKA bulat (contoh 2500000000 untuk 2,5 M, 15000000 untuk 15 juta). null jika tidak disebut
 - priceUnit: "total" untuk harga jual/total, "per_bulan" atau "per_tahun" untuk sewa
@@ -241,9 +265,14 @@ export function fallbackParse(message: string): ParsedListing {
 
   const negotiable = /nego|negotiable|nett bisa kurang|bisa nego/i.test(lower);
 
-  const title =
-    text.split("\n")[0]?.slice(0, 70) ||
-    `${propertyType} ${listingType === "jual" ? "dijual" : "disewa"}`;
+  // Build a tidy title from known components (Title Case, EYD).
+  const titleParts = [PROPERTY_TYPE_LABELS[propertyType]];
+  if (floors) titleParts.push(`${floors} Lantai`);
+  if (bedrooms) titleParts.push(`${bedrooms} Kamar`);
+  if (furnished === "full") titleParts.push("Furnished");
+  if (city) titleParts.push(`di ${city}`);
+  if (negotiable) titleParts.push("Nego");
+  const title = titleCase(titleParts.join(" ")).slice(0, 70);
 
   return {
     listingType,
