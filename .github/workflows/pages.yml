@@ -32,7 +32,7 @@ jobs:
       - name: Build static export
         env:
           NEXT_PUBLIC_STATIC: "1"
-          NEXT_PUBLIC_BASE_PATH: /future-pro
+          NEXT_PUBLIC_BASE_PATH: /forior.space
           NEXT_PUBLIC_SITE_NAME: Forior Space
           NEXT_PUBLIC_SITE_TAGLINE: "Properti pilihan di Jakarta, Tangsel & sekitarnya"
           NEXT_PUBLIC_AGENT_NAME: Forior Space

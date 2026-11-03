@@ -2,8 +2,8 @@
  * Prefix for static assets.
  *
  * Empty in the normal (server) app. When exporting a static preview for
- * GitHub Pages (served from a sub-folder like /future-pro), set
- * NEXT_PUBLIC_BASE_PATH=/future-pro so raw <img> / icon URLs resolve.
+ * GitHub Pages (served from a sub-folder like /forior.space), set
+ * NEXT_PUBLIC_BASE_PATH=/forior.space so raw <img> / icon URLs resolve.
  */
 export const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "";
 

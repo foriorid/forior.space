@@ -60,7 +60,7 @@ Repo ini sudah punya workflow (`.github/workflows/pages.yml`) yang mem-publish
 **preview statis situs publik** (beranda, cari, detail — dengan data contoh) ke
 GitHub Pages setiap push ke `main`.
 
-URL: **https://foriorid.github.io/future-pro/**
+URL: **https://foriorid.github.io/forior.space/**
 
 > Aktifkan sekali di **Settings → Pages → Build and deployment → Source: GitHub Actions**.
 >
