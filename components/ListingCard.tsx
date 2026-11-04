@@ -1,13 +1,16 @@
 import Link from "next/link";
 import type { Listing } from "@/lib/types";
 import { PROPERTY_TYPE_LABELS } from "@/lib/types";
-import { formatPrice, formatArea, locationLabel } from "@/lib/format";
+import { formatArea, locationLabel } from "@/lib/format";
+import { resolvePricing, priceLines } from "@/lib/pricing";
 import { withBase } from "@/lib/asset";
 import { IconBed, IconBath, IconRuler, IconLand, IconPin } from "./icons";
 
 export function ListingCard({ listing }: { listing: Listing }) {
   const cover = listing.images[0]?.url;
-  const isSewa = listing.listingType === "sewa";
+  const pricing = resolvePricing(listing);
+  const lines = priceLines(pricing);
+  const dual = lines.length > 1;
 
   return (
     <Link
@@ -29,23 +32,41 @@ export function ListingCard({ listing }: { listing: Listing }) {
           </div>
         )}
 
-        <div className="absolute left-2.5 top-2.5 flex gap-1.5">
-          <span
-            className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${
-              isSewa ? "bg-foreground text-background" : "bg-accent text-accent-ink"
-            }`}
-          >
-            {isSewa ? "Disewa" : "Dijual"}
-          </span>
+        <div className="absolute left-2.5 top-2.5 flex flex-wrap gap-1.5">
+          {pricing.forSale && (
+            <span className="rounded-full bg-accent px-2.5 py-1 text-[11px] font-bold text-accent-ink">
+              Dijual
+            </span>
+          )}
+          {pricing.forRent && (
+            <span className="rounded-full bg-foreground px-2.5 py-1 text-[11px] font-bold text-background">
+              Disewa
+            </span>
+          )}
           <span className="rounded-full bg-black/40 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur-md">
             {PROPERTY_TYPE_LABELS[listing.propertyType]}
           </span>
         </div>
 
         {/* Price glass pill */}
-        <div className="absolute bottom-2.5 left-2.5 rounded-full bg-black/45 px-3 py-1.5 text-sm font-bold text-white backdrop-blur-md">
-          {formatPrice(listing.price, listing.priceUnit)}
-          {listing.negotiable && <span className="ml-1 text-[11px] font-medium opacity-80">nego</span>}
+        <div className="absolute bottom-2.5 left-2.5 rounded-2xl bg-black/45 px-3 py-1.5 text-white backdrop-blur-md">
+          {dual ? (
+            <div className="space-y-0.5">
+              {lines.map((l) => (
+                <div key={l.kind} className="flex items-baseline gap-1.5 text-xs font-bold leading-tight">
+                  <span className="text-[9px] font-semibold uppercase opacity-70">{l.label}</span>
+                  {l.value}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-sm font-bold">
+              {lines[0]?.value}
+              {listing.negotiable && (
+                <span className="ml-1 text-[11px] font-medium opacity-80">nego</span>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

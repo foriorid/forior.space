@@ -3,6 +3,7 @@ import path from "path";
 import { nanoid } from "nanoid";
 import type { Listing, ListingStatus, ListingType, PropertyType, Settings } from "./types";
 import { seedListings } from "./seed";
+import { resolvePricing } from "./pricing";
 
 /**
  * File-based data store (default / MVP). Used when Supabase is not configured.
@@ -60,7 +61,13 @@ export async function getListings(filter: ListingFilter = {}): Promise<Listing[]
   let items = await readAll();
 
   if (filter.status) items = items.filter((l) => l.status === filter.status);
-  if (filter.listingType) items = items.filter((l) => l.listingType === filter.listingType);
+  if (filter.listingType) {
+    const want = filter.listingType;
+    items = items.filter((l) => {
+      const p = resolvePricing(l);
+      return want === "sewa" ? p.forRent : p.forSale;
+    });
+  }
   if (filter.propertyType) items = items.filter((l) => l.propertyType === filter.propertyType);
   if (filter.city) items = items.filter((l) => l.city.toLowerCase().includes(filter.city!.toLowerCase()));
   if (filter.q) {

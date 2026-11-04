@@ -5,15 +5,19 @@ import { useRef, useState } from "react";
 import type { Listing, ListingImage, ParsedListing } from "@/lib/types";
 import { PROPERTY_TYPE_LABELS } from "@/lib/types";
 import { formatPrice } from "@/lib/format";
+import { resolvePricing, legacyPricing } from "@/lib/pricing";
+import { serializeNearby, parseNearby } from "@/lib/nearby";
 import { IconSparkles, IconUpload, IconTrash, IconArrowLeft } from "./icons";
 
 interface FormState {
-  listingType: "jual" | "sewa";
   propertyType: ParsedListing["propertyType"];
   title: string;
   description: string;
-  price: number | null;
-  priceUnit: "total" | "per_bulan" | "per_tahun";
+  forSale: boolean;
+  forRent: boolean;
+  salePrice: number | null;
+  rentPrice: number | null;
+  rentUnit: "per_bulan" | "per_tahun";
   negotiable: boolean;
   bedrooms: number | null;
   bathrooms: number | null;
@@ -30,12 +34,14 @@ interface FormState {
 
 function emptyForm(): FormState {
   return {
-    listingType: "jual",
     propertyType: "rumah",
     title: "",
     description: "",
-    price: null,
-    priceUnit: "total",
+    forSale: true,
+    forRent: false,
+    salePrice: null,
+    rentPrice: null,
+    rentUnit: "per_bulan",
     negotiable: false,
     bedrooms: null,
     bathrooms: null,
@@ -51,10 +57,31 @@ function emptyForm(): FormState {
   };
 }
 
-function fromListing(l: Listing): FormState {
-  const { id, status, images, rawMessage, createdAt, updatedAt, ...rest } = l;
-  void id; void status; void images; void rawMessage; void createdAt; void updatedAt;
-  return rest;
+/** Map a stored listing or a freshly parsed result into editable form state. */
+function toForm(src: Listing | ParsedListing): FormState {
+  const p = resolvePricing(src);
+  return {
+    propertyType: src.propertyType,
+    title: src.title ?? "",
+    description: src.description ?? "",
+    forSale: p.forSale,
+    forRent: p.forRent,
+    salePrice: p.salePrice,
+    rentPrice: p.rentPrice,
+    rentUnit: p.rentUnit,
+    negotiable: src.negotiable ?? false,
+    bedrooms: src.bedrooms ?? null,
+    bathrooms: src.bathrooms ?? null,
+    landArea: src.landArea ?? null,
+    buildingArea: src.buildingArea ?? null,
+    floors: src.floors ?? null,
+    carports: src.carports ?? null,
+    certificate: src.certificate ?? "",
+    furnished: src.furnished ?? "",
+    address: src.address ?? "",
+    city: src.city ?? "",
+    facilities: src.facilities ?? [],
+  };
 }
 
 export function ListingEditor({ existing }: { existing?: Listing }) {
@@ -70,11 +97,14 @@ export function ListingEditor({ existing }: { existing?: Listing }) {
   const [usedAi, setUsedAi] = useState<boolean | null>(null);
 
   const [form, setForm] = useState<FormState>(
-    existing ? fromListing(existing) : emptyForm(),
+    existing ? toForm(existing) : emptyForm(),
   );
   const [images, setImages] = useState<ListingImage[]>(existing?.images ?? []);
   const [facilitiesText, setFacilitiesText] = useState(
     (existing?.facilities ?? []).join(", "),
+  );
+  const [nearbyText, setNearbyText] = useState(
+    serializeNearby(existing?.nearby),
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -122,8 +152,9 @@ export function ListingEditor({ existing }: { existing?: Listing }) {
       if (!res.ok) throw new Error("Gagal memproses pesan");
       const data = await res.json();
       const parsed = data.parsed as ParsedListing;
-      setForm({ ...emptyForm(), ...parsed });
+      setForm(toForm(parsed));
       setFacilitiesText((parsed.facilities ?? []).join(", "));
+      setNearbyText(serializeNearby(parsed.nearby));
       setImages(uploaded);
       setUsedAi(Boolean(data.usedAi));
       setPhase("form");
@@ -155,12 +186,21 @@ export function ListingEditor({ existing }: { existing?: Listing }) {
     }
     setSaving(true);
     try {
+      const pricing = resolvePricing(form);
+      const legacy = legacyPricing(pricing);
       const payload = {
         ...form,
+        forSale: pricing.forSale,
+        forRent: pricing.forRent,
+        salePrice: pricing.forSale ? pricing.salePrice : null,
+        rentPrice: pricing.forRent ? pricing.rentPrice : null,
+        rentUnit: pricing.rentUnit,
+        ...legacy, // listingType, price, priceUnit kept in sync for compatibility
         facilities: facilitiesText
           .split(",")
           .map((s) => s.trim())
           .filter(Boolean),
+        nearby: parseNearby(nearbyText),
         images,
         rawMessage: message,
         status,
@@ -340,46 +380,75 @@ export function ListingEditor({ existing }: { existing?: Listing }) {
             placeholder="Rumah Modern 2 Lantai di Bintaro"
           />
         </Field>
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Jenis">
-            <select value={form.listingType} onChange={(e) => set("listingType", e.target.value as FormState["listingType"])} className={inputCls}>
-              <option value="jual">Dijual</option>
-              <option value="sewa">Disewa</option>
-            </select>
-          </Field>
-          <Field label="Tipe Properti">
-            <select value={form.propertyType} onChange={(e) => set("propertyType", e.target.value as FormState["propertyType"])} className={inputCls}>
-              {Object.entries(PROPERTY_TYPE_LABELS).map(([v, l]) => (
-                <option key={v} value={v}>{l}</option>
-              ))}
-            </select>
-          </Field>
-        </div>
-        <Field label="Harga (Rupiah)" hint={form.price != null ? formatPrice(form.price, form.priceUnit) : undefined}>
-          <input
-            inputMode="numeric"
-            value={form.price ?? ""}
-            onChange={(e) => {
-              const digits = e.target.value.replace(/\D/g, "");
-              set("price", digits ? parseInt(digits, 10) : null);
-            }}
-            className={inputCls}
-            placeholder="2500000000"
-          />
+        <Field label="Tipe Properti">
+          <select value={form.propertyType} onChange={(e) => set("propertyType", e.target.value as FormState["propertyType"])} className={inputCls}>
+            {Object.entries(PROPERTY_TYPE_LABELS).map(([v, l]) => (
+              <option key={v} value={v}>{l}</option>
+            ))}
+          </select>
         </Field>
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Satuan Harga">
-            <select value={form.priceUnit} onChange={(e) => set("priceUnit", e.target.value as FormState["priceUnit"])} className={inputCls}>
-              <option value="total">Total</option>
-              <option value="per_bulan">Per Bulan</option>
-              <option value="per_tahun">Per Tahun</option>
-            </select>
-          </Field>
-          <label className="flex items-end gap-2 pb-3 text-sm font-medium">
-            <input type="checkbox" checked={form.negotiable} onChange={(e) => set("negotiable", e.target.checked)} className="h-5 w-5 rounded accent-accent" />
-            Nego
-          </label>
+
+        <div>
+          <span className="mb-1.5 block text-xs font-medium text-[color:var(--muted)]">
+            Status pemasaran (bisa pilih dua-duanya)
+          </span>
+          <div className="grid grid-cols-2 gap-2">
+            <label className={`press flex cursor-pointer items-center justify-center gap-2 rounded-xl border py-2.5 text-sm font-semibold ${form.forSale ? "border-accent bg-accent/15" : "border-line bg-surface/50 text-[color:var(--muted)]"}`}>
+              <input type="checkbox" checked={form.forSale} onChange={(e) => set("forSale", e.target.checked)} className="h-4 w-4 rounded accent-accent" />
+              Dijual
+            </label>
+            <label className={`press flex cursor-pointer items-center justify-center gap-2 rounded-xl border py-2.5 text-sm font-semibold ${form.forRent ? "border-accent bg-accent/15" : "border-line bg-surface/50 text-[color:var(--muted)]"}`}>
+              <input type="checkbox" checked={form.forRent} onChange={(e) => set("forRent", e.target.checked)} className="h-4 w-4 rounded accent-accent" />
+              Disewa
+            </label>
+          </div>
+          {!form.forSale && !form.forRent && (
+            <p className="mt-1.5 text-xs font-medium text-amber-600">Pilih minimal satu status.</p>
+          )}
         </div>
+
+        {form.forSale && (
+          <Field label="Harga Jual (Rupiah)" hint={form.salePrice != null ? formatPrice(form.salePrice, "total") : undefined}>
+            <input
+              inputMode="numeric"
+              value={form.salePrice ?? ""}
+              onChange={(e) => {
+                const digits = e.target.value.replace(/\D/g, "");
+                set("salePrice", digits ? parseInt(digits, 10) : null);
+              }}
+              className={inputCls}
+              placeholder="2500000000"
+            />
+          </Field>
+        )}
+
+        {form.forRent && (
+          <div className="grid grid-cols-[1fr_auto] gap-3">
+            <Field label="Harga Sewa (Rupiah)" hint={form.rentPrice != null ? formatPrice(form.rentPrice, form.rentUnit) : undefined}>
+              <input
+                inputMode="numeric"
+                value={form.rentPrice ?? ""}
+                onChange={(e) => {
+                  const digits = e.target.value.replace(/\D/g, "");
+                  set("rentPrice", digits ? parseInt(digits, 10) : null);
+                }}
+                className={inputCls}
+                placeholder="50000000"
+              />
+            </Field>
+            <Field label="Per">
+              <select value={form.rentUnit} onChange={(e) => set("rentUnit", e.target.value as FormState["rentUnit"])} className={inputCls}>
+                <option value="per_bulan">Bulan</option>
+                <option value="per_tahun">Tahun</option>
+              </select>
+            </Field>
+          </div>
+        )}
+
+        <label className="flex items-center gap-2 text-sm font-medium">
+          <input type="checkbox" checked={form.negotiable} onChange={(e) => set("negotiable", e.target.checked)} className="h-5 w-5 rounded accent-accent" />
+          Harga nego
+        </label>
       </Section>
 
       <Section title="Spesifikasi">
@@ -426,6 +495,21 @@ export function ListingEditor({ existing }: { existing?: Listing }) {
         </Field>
         <Field label="Fasilitas (pisahkan dengan koma)" hint="cth: Dekat tol, Carport 2 mobil, SHM">
           <input value={facilitiesText} onChange={(e) => setFacilitiesText(e.target.value)} className={inputCls} placeholder="Dekat tol, Carport, Security 24 jam" />
+        </Field>
+      </Section>
+
+      <Section title="Fasilitas Akses Sekitar">
+        <Field
+          label="Satu tempat per baris — format: Kategori | Nama | Waktu"
+          hint="Kategori: Swalayan, Rumah Sakit, Sekolah, Transportasi, Kuliner, Ibadah, Rekreasi, Lainnya"
+        >
+          <textarea
+            value={nearbyText}
+            onChange={(e) => setNearbyText(e.target.value)}
+            rows={5}
+            className={inputCls}
+            placeholder={"Swalayan | Superindo | 5 menit\nRumah Sakit | RS Pondok Indah | 10 menit\nSekolah | SD Al Azhar | 7 menit\nTransportasi | Gerbang Tol JORR | 3 menit"}
+          />
         </Field>
       </Section>
 

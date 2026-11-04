@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import type { Listing, PropertyType } from "@/lib/types";
 import { PROPERTY_TYPE_LABELS } from "@/lib/types";
+import { resolvePricing } from "@/lib/pricing";
 import { ListingCard } from "./ListingCard";
 import { IconSearch } from "./icons";
 
@@ -20,7 +21,10 @@ export function CariStatic({ listings }: { listings: Listing[] }) {
   const results = useMemo(() => {
     const query = q.trim().toLowerCase();
     return listings.filter((l) => {
-      if (jenis && l.listingType !== jenis) return false;
+      if (jenis) {
+        const p = resolvePricing(l);
+        if (jenis === "sewa" ? !p.forRent : !p.forSale) return false;
+      }
       if (tipe && l.propertyType !== tipe) return false;
       if (query) {
         const hay = [l.title, l.description, l.address, l.city]

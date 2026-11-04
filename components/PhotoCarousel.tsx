@@ -6,9 +6,12 @@ import { withBase } from "@/lib/asset";
 export function PhotoCarousel({
   images,
   title,
+  onPhotoClick,
 }: {
   images: { url: string }[];
   title: string;
+  /** Called with the tapped photo index (used to open the lightbox). */
+  onPhotoClick?: (index: number) => void;
 }) {
   const [active, setActive] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
@@ -41,7 +44,10 @@ export function PhotoCarousel({
             key={i}
             src={withBase(img.url)}
             alt={`${title} — foto ${i + 1}`}
-            className="h-full w-full shrink-0 snap-center object-cover"
+            onClick={onPhotoClick ? () => onPhotoClick(i) : undefined}
+            className={`h-full w-full shrink-0 snap-center object-cover ${
+              onPhotoClick ? "cursor-zoom-in" : ""
+            }`}
           />
         ))}
       </div>

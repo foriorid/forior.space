@@ -10,9 +10,32 @@ export type PropertyType =
   | "gudang"
   | "kost"
   | "villa"
+  | "ruang_usaha"
+  | "gedung"
   | "lainnya";
 
 export type PriceUnit = "total" | "per_bulan" | "per_tahun";
+
+/** Unit for a rent price (sale is always a total). */
+export type RentUnit = "per_bulan" | "per_tahun";
+
+/** Category of a nearby place, used to pick an icon on the detail page. */
+export type NearbyCategory =
+  | "swalayan"
+  | "rumah_sakit"
+  | "sekolah"
+  | "transportasi"
+  | "kuliner"
+  | "ibadah"
+  | "rekreasi"
+  | "lainnya";
+
+export interface NearbyPlace {
+  category: NearbyCategory;
+  name: string;
+  /** Travel time text as shown, e.g. "5 menit". */
+  time: string;
+}
 
 export type Certificate =
   | "SHM"
@@ -36,13 +59,21 @@ export interface ListingImage {
 export interface Listing {
   id: string;
   status: ListingStatus;
-  listingType: ListingType;
+  listingType: ListingType; // legacy primary status (kept in sync for compatibility)
   propertyType: PropertyType;
   title: string;
   description: string;
-  price: number | null; // in Rupiah
+  price: number | null; // in Rupiah — legacy primary price (kept in sync)
   priceUnit: PriceUnit;
   negotiable: boolean;
+  // Dual marketing: a listing can be offered for sale AND for rent at once.
+  forSale?: boolean;
+  forRent?: boolean;
+  salePrice?: number | null; // Rupiah (total)
+  rentPrice?: number | null; // Rupiah
+  rentUnit?: RentUnit;
+  /** Nearby access/places, grouped & displayed on the detail page. */
+  nearby?: NearbyPlace[];
   bedrooms: number | null;
   bathrooms: number | null;
   landArea: number | null; // m2
@@ -70,6 +101,12 @@ export type ParsedListing = Pick<
   | "price"
   | "priceUnit"
   | "negotiable"
+  | "forSale"
+  | "forRent"
+  | "salePrice"
+  | "rentPrice"
+  | "rentUnit"
+  | "nearby"
   | "bedrooms"
   | "bathrooms"
   | "landArea"
@@ -91,12 +128,25 @@ export const PROPERTY_TYPE_LABELS: Record<PropertyType, string> = {
   gudang: "Gudang",
   kost: "Kost",
   villa: "Villa",
+  ruang_usaha: "Ruang Usaha",
+  gedung: "Gedung",
   lainnya: "Lainnya",
 };
 
 export const LISTING_TYPE_LABELS: Record<ListingType, string> = {
   jual: "Dijual",
   sewa: "Disewa",
+};
+
+export const NEARBY_CATEGORY_LABELS: Record<NearbyCategory, string> = {
+  swalayan: "Swalayan",
+  rumah_sakit: "Rumah Sakit",
+  sekolah: "Sekolah",
+  transportasi: "Transportasi",
+  kuliner: "Kuliner",
+  ibadah: "Ibadah",
+  rekreasi: "Rekreasi",
+  lainnya: "Lainnya",
 };
 
 /** Editable site/agent settings (managed from the admin settings page). */

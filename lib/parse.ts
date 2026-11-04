@@ -42,6 +42,8 @@ const parsedSchema = z.object({
       "gudang",
       "kost",
       "villa",
+      "ruang_usaha",
+      "gedung",
       "lainnya",
     ])
     .default("rumah"),
@@ -50,6 +52,31 @@ const parsedSchema = z.object({
   price: z.number().nullable().default(null),
   priceUnit: z.enum(["total", "per_bulan", "per_tahun"]).default("total"),
   negotiable: z.boolean().default(false),
+  forSale: z.boolean().default(false),
+  forRent: z.boolean().default(false),
+  salePrice: z.number().nullable().default(null),
+  rentPrice: z.number().nullable().default(null),
+  rentUnit: z.enum(["per_bulan", "per_tahun"]).default("per_bulan"),
+  nearby: z
+    .array(
+      z.object({
+        category: z
+          .enum([
+            "swalayan",
+            "rumah_sakit",
+            "sekolah",
+            "transportasi",
+            "kuliner",
+            "ibadah",
+            "rekreasi",
+            "lainnya",
+          ])
+          .default("lainnya"),
+        name: z.string().default(""),
+        time: z.string().default(""),
+      }),
+    )
+    .default([]),
   bedrooms: z.number().int().nullable().default(null),
   bathrooms: z.number().int().nullable().default(null),
   landArea: z.number().nullable().default(null),
@@ -73,8 +100,20 @@ const SYSTEM_PROMPT = `Kamu adalah asisten agen properti di Indonesia (area Jaka
 Tugasmu: membaca pesan bebas dari agen (gaya chat WhatsApp) beserta foto (jika ada), lalu mengubahnya menjadi data listing properti yang terstruktur.
 
 Keluarkan HANYA objek JSON valid (tanpa markdown, tanpa penjelasan) dengan field berikut:
-- listingType: "jual" atau "sewa"
-- propertyType: salah satu dari "rumah" | "apartemen" | "ruko" | "tanah" | "gudang" | "kost" | "villa" | "lainnya"
+- listingType: "jual" atau "sewa" (status utama; isi "jual" bila dijual, "sewa" bila hanya disewa)
+- propertyType: salah satu dari "rumah" | "apartemen" | "ruko" | "tanah" | "gudang" | "kost" | "villa" | "ruang_usaha" | "gedung" | "lainnya"
+  ("ruang_usaha" untuk office space/ruang kantor/tenant space; "gedung" untuk gedung/building utuh perkantoran/komersial)
+- forSale: true bila properti dijual
+- forRent: true bila properti disewakan
+  (Sebuah listing BISA dijual DAN disewa sekaligus — set keduanya true bila pesan menyebut dua-duanya, mis. "dijual/disewakan".)
+- salePrice: harga JUAL dalam Rupiah sebagai ANGKA bulat, atau null bila tidak dijual/tidak disebut
+- rentPrice: harga SEWA dalam Rupiah sebagai ANGKA bulat, atau null bila tidak disewa/tidak disebut
+- rentUnit: "per_bulan" atau "per_tahun" untuk harga sewa
+- nearby: array akses/tempat terdekat yang disebut di pesan. Tiap item objek: { "category", "name", "time" }.
+    category: "swalayan" | "rumah_sakit" | "sekolah" | "transportasi" | "kuliner" | "ibadah" | "rekreasi" | "lainnya".
+    name: nama tempat (mis. "RS Pondok Indah", "Stasiun Sudirman", "SD Al Azhar").
+    time: estemasi waktu tempuh seperti ditulis (mis. "5 menit"). Kosongkan "" bila tidak ada.
+    Hanya isi dari yang DISEBUT di pesan; jangan mengarang tempat. Kosongkan [] bila tidak ada.
 - title: judul listing yang rapi mengikuti pola:
     [Jenis Properti] + [Tipe] + [Unik Poin] + "di" [Lokasi] + [Hot Offering]
   Urutan Tipe & Unik Poin boleh ditukar agar natural. Contoh yang benar:
@@ -181,7 +220,31 @@ function normalize(p: ParsedListing, message: string): ParsedListing {
     p.title = message.split("\n")[0]?.slice(0, 70) || "Listing Properti";
   }
   if (!p.description) p.description = message.trim();
-  // Sewa listings shouldn't keep "total" as unit if clearly monthly phrasing exists.
+
+  // Reconcile the dual sale/rent flags. If the model gave neither, derive from
+  // the primary listingType so legacy-style output still works.
+  if (!p.forSale && !p.forRent) {
+    if (p.listingType === "sewa") p.forRent = true;
+    else p.forSale = true;
+  }
+  // Backfill a sale/rent price from the primary price when only one side exists.
+  if (p.forSale && p.salePrice == null && p.listingType !== "sewa") {
+    p.salePrice = p.price ?? null;
+  }
+  if (p.forRent && p.rentPrice == null) {
+    if (p.listingType === "sewa") p.rentPrice = p.price ?? null;
+    if (p.priceUnit === "per_tahun") p.rentUnit = "per_tahun";
+  }
+  // Keep the legacy primary fields in sync (sale is primary when present).
+  if (p.forSale) {
+    p.listingType = "jual";
+    p.price = p.salePrice ?? null;
+    p.priceUnit = "total";
+  } else if (p.forRent) {
+    p.listingType = "sewa";
+    p.price = p.rentPrice ?? null;
+    p.priceUnit = p.rentUnit ?? "per_bulan";
+  }
   return p;
 }
 
@@ -270,7 +333,9 @@ export function fallbackParse(message: string): ParsedListing {
   const text = message.trim();
   const lower = text.toLowerCase();
 
-  const listingType = /sewa|disewa|dikontrak|kontrakan|rent/.test(lower) ? "sewa" : "jual";
+  const forRent = /sewa|disewa|dikontrak|kontrakan|\brent\b/.test(lower);
+  const forSale = /jual|dijual|\bbu\b|over\s*kredit/.test(lower) || !forRent;
+  const listingType: ParsedListing["listingType"] = forSale ? "jual" : "sewa";
 
   // Detect property type. "tanah" must NOT be triggered by the spec label
   // "luas tanah", and the opening line is the strongest signal.
@@ -278,6 +343,8 @@ export function fallbackParse(message: string): ParsedListing {
     if (/apartemen|\bapart\b|\bapt\b|condo/.test(s)) return "apartemen";
     if (/ruko|rukan/.test(s)) return "ruko";
     if (/gudang|warehouse/.test(s)) return "gudang";
+    if (/\bgedung\b|building|perkantoran/.test(s)) return "gedung";
+    if (/ruang usaha|ruang kantor|office space|\bkantor\b|tenant/.test(s)) return "ruang_usaha";
     if (/\bvill?a\b|\bvila\b/.test(s)) return "villa";
     if (/\bkost?\b|kos-kosan|kosan/.test(s)) return "kost";
     if (/\brumah\b/.test(s)) return "rumah";
@@ -291,6 +358,10 @@ export function fallbackParse(message: string): ParsedListing {
     detectType(head) ?? detectType(bodyNoLuas) ?? "rumah";
 
   const { price, unit } = parsePriceId(text);
+  // Map the single parsed price onto the sale/rent sides as best we can.
+  const rentUnit: "per_bulan" | "per_tahun" = unit === "per_tahun" ? "per_tahun" : "per_bulan";
+  const salePrice = forSale && unit === "total" ? price : null;
+  const rentPrice = forRent && unit !== "total" ? price : null;
 
   // Handles both "3 KT" and "Kamar Tidur : 3" / "Jumlah Kamar Tidur: 1 (satu)".
   const bedrooms = extractNum(lower, "kamar tidur|bed\\s?room|\\bkt\\b|\\bbr\\b");
@@ -346,6 +417,12 @@ export function fallbackParse(message: string): ParsedListing {
     price,
     priceUnit: unit,
     negotiable,
+    forSale,
+    forRent,
+    salePrice,
+    rentPrice,
+    rentUnit,
+    nearby: [],
     bedrooms,
     bathrooms,
     landArea,

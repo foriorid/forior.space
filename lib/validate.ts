@@ -12,6 +12,8 @@ export const listingInputSchema = z.object({
       "gudang",
       "kost",
       "villa",
+      "ruang_usaha",
+      "gedung",
       "lainnya",
     ])
     .default("rumah"),
@@ -20,6 +22,31 @@ export const listingInputSchema = z.object({
   price: z.number().nullable().default(null),
   priceUnit: z.enum(["total", "per_bulan", "per_tahun"]).default("total"),
   negotiable: z.boolean().default(false),
+  // Dual marketing (optional; legacy records omit these).
+  forSale: z.boolean().optional(),
+  forRent: z.boolean().optional(),
+  salePrice: z.number().nullable().optional(),
+  rentPrice: z.number().nullable().optional(),
+  rentUnit: z.enum(["per_bulan", "per_tahun"]).optional(),
+  nearby: z
+    .array(
+      z.object({
+        category: z.enum([
+          "swalayan",
+          "rumah_sakit",
+          "sekolah",
+          "transportasi",
+          "kuliner",
+          "ibadah",
+          "rekreasi",
+          "lainnya",
+        ]),
+        name: z.string(),
+        time: z.string(),
+      }),
+    )
+    .optional()
+    .default([]),
   bedrooms: z.number().int().nullable().default(null),
   bathrooms: z.number().int().nullable().default(null),
   landArea: z.number().nullable().default(null),

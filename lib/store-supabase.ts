@@ -2,6 +2,7 @@ import { nanoid } from "nanoid";
 import type { Listing, Settings } from "./types";
 import type { ListingFilter } from "./store-file";
 import { getSupabaseAdmin, IMAGE_BUCKET } from "./supabase";
+import { resolvePricing } from "./pricing";
 
 /**
  * Supabase-backed data store (used when SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY
@@ -25,7 +26,13 @@ const EXT_BY_MIME: Record<string, string> = {
 
 function applyFilters(items: Listing[], filter: ListingFilter): Listing[] {
   let out = items;
-  if (filter.listingType) out = out.filter((l) => l.listingType === filter.listingType);
+  if (filter.listingType) {
+    const want = filter.listingType;
+    out = out.filter((l) => {
+      const p = resolvePricing(l);
+      return want === "sewa" ? p.forRent : p.forSale;
+    });
+  }
   if (filter.propertyType) out = out.filter((l) => l.propertyType === filter.propertyType);
   if (filter.city) out = out.filter((l) => l.city.toLowerCase().includes(filter.city!.toLowerCase()));
   if (filter.q) {

@@ -1,14 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { withBase } from "@/lib/asset";
 import { PhotoCarousel } from "./PhotoCarousel";
 
 /**
  * Listing photo gallery.
- * - Mobile: swipeable carousel.
+ * - Mobile: swipeable carousel; tapping a photo opens the lightbox.
  * - Desktop: 1 big photo + a 2x2 grid; when there are more than 5 photos the
- *   last visible cell shows a "+N" overlay. Any photo opens a full lightbox.
+ *   last visible cell shows a "+N" overlay. Any photo opens the lightbox.
+ * - Lightbox: fullscreen, horizontal swipe (left ↔ right) between photos.
  */
 export function PhotoGallery({
   images,
@@ -18,22 +19,52 @@ export function PhotoGallery({
   title: string;
 }) {
   const [open, setOpen] = useState(false);
-  const [, setStart] = useState(0);
+  const [start, setStart] = useState(0);
+  const [active, setActive] = useState(0);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+      if (e.key === "ArrowRight") scrollBy(1);
+      if (e.key === "ArrowLeft") scrollBy(-1);
+    };
     window.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
     return () => {
       window.removeEventListener("keydown", onKey);
       document.body.style.overflow = "";
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
+
+  // Jump the lightbox scroller to the photo that was tapped, once it's mounted.
+  useEffect(() => {
+    if (!open) return;
+    const el = scrollRef.current;
+    if (el) {
+      el.scrollLeft = start * el.clientWidth;
+      setActive(start);
+    }
+  }, [open, start]);
 
   function openAt(i: number) {
     setStart(i);
+    setActive(i);
     setOpen(true);
+  }
+
+  function onLightboxScroll() {
+    const el = scrollRef.current;
+    if (!el) return;
+    setActive(Math.round(el.scrollLeft / el.clientWidth));
+  }
+
+  function scrollBy(dir: number) {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollTo({ left: (active + dir) * el.clientWidth, behavior: "smooth" });
   }
 
   const right = images.slice(1, 5);
@@ -41,9 +72,9 @@ export function PhotoGallery({
 
   return (
     <>
-      {/* Mobile: carousel */}
+      {/* Mobile: carousel (tap to open lightbox) */}
       <div className="overflow-hidden rounded-[24px] lg:hidden">
-        <PhotoCarousel images={images} title={title} />
+        <PhotoCarousel images={images} title={title} onPhotoClick={openAt} />
       </div>
 
       {/* Desktop: grid */}
@@ -110,11 +141,13 @@ export function PhotoGallery({
         )}
       </div>
 
-      {/* Lightbox */}
+      {/* Lightbox — horizontal swipe */}
       {open && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/95">
-          <div className="sticky top-0 z-10 flex items-center justify-between bg-black/60 px-5 py-4 text-white backdrop-blur">
-            <span className="text-sm font-semibold">{images.length} Foto</span>
+        <div className="fixed inset-0 z-50 flex flex-col bg-black/95">
+          <div className="flex items-center justify-between px-5 py-4 text-white">
+            <span className="text-sm font-semibold">
+              {active + 1} / {images.length}
+            </span>
             <button
               onClick={() => setOpen(false)}
               className="rounded-full bg-white/15 px-4 py-1.5 text-sm font-semibold"
@@ -122,17 +155,62 @@ export function PhotoGallery({
               Tutup ✕
             </button>
           </div>
-          <div className="mx-auto max-w-3xl space-y-3 p-4">
+
+          <div
+            ref={scrollRef}
+            onScroll={onLightboxScroll}
+            className="no-scrollbar flex flex-1 snap-x snap-mandatory overflow-x-auto overflow-y-hidden"
+          >
             {images.map((img, i) => (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
+              <div
                 key={i}
-                src={withBase(img.url)}
-                alt={`${title} ${i + 1}`}
-                className="w-full rounded-2xl"
-              />
+                className="flex h-full w-full shrink-0 snap-center items-center justify-center p-3"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={withBase(img.url)}
+                  alt={`${title} ${i + 1}`}
+                  className="max-h-full max-w-full rounded-2xl object-contain"
+                />
+              </div>
             ))}
           </div>
+
+          {/* Desktop arrows */}
+          {images.length > 1 && (
+            <>
+              <button
+                onClick={() => scrollBy(-1)}
+                aria-label="Sebelumnya"
+                className="absolute left-3 top-1/2 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/15 text-xl text-white lg:flex"
+              >
+                ‹
+              </button>
+              <button
+                onClick={() => scrollBy(1)}
+                aria-label="Berikutnya"
+                className="absolute right-3 top-1/2 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/15 text-xl text-white lg:flex"
+              >
+                ›
+              </button>
+            </>
+          )}
+
+          {/* Dots */}
+          {images.length > 1 && (
+            <div className="flex items-center justify-center gap-1.5 py-4">
+              {images.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => scrollBy(i - active)}
+                  aria-label={`Foto ${i + 1}`}
+                  className={`h-1.5 rounded-full transition-all ${
+                    i === active ? "w-5 bg-white" : "w-1.5 bg-white/50"
+                  }`}
+                />
+              ))}
+            </div>
+          )}
         </div>
       )}
     </>

@@ -5,6 +5,8 @@ import { getListing, getListings, getSettings } from "@/lib/store";
 import { isAuthed } from "@/lib/guard";
 import { IS_STATIC } from "@/lib/asset";
 import { PhotoGallery } from "@/components/PhotoGallery";
+import { ShareButton } from "@/components/ShareButton";
+import { NearbySection } from "@/components/NearbySection";
 import {
   IconArrowLeft,
   IconBed,
@@ -16,8 +18,9 @@ import {
   IconWhatsApp,
   IconEdit,
 } from "@/components/icons";
-import { formatPrice, formatArea, locationLabel } from "@/lib/format";
-import { PROPERTY_TYPE_LABELS, LISTING_TYPE_LABELS } from "@/lib/types";
+import { formatArea, locationLabel } from "@/lib/format";
+import { resolvePricing, priceLines } from "@/lib/pricing";
+import { PROPERTY_TYPE_LABELS } from "@/lib/types";
 import { waLinkWith, toLocalPhone } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
@@ -76,6 +79,8 @@ export default async function ListingDetail({
   if (!listing || (listing.status !== "published" && !authed)) notFound();
   const agentName = settings.agentName;
   const phoneLocal = toLocalPhone(settings.waNumber);
+  const pricing = resolvePricing(listing);
+  const lines = priceLines(pricing);
 
   const specs = [
     listing.bedrooms != null && { icon: IconBed, label: "Kamar Tidur", value: String(listing.bedrooms) },
@@ -86,10 +91,10 @@ export default async function ListingDetail({
     listing.carports != null && { icon: IconCar, label: "Carport", value: String(listing.carports) },
   ].filter(Boolean) as { icon: typeof IconBed; label: string; value: string }[];
 
-  const waMessage = `Halo ${agentName}, saya tertarik dengan properti "${listing.title}" (${formatPrice(
-    listing.price,
-    listing.priceUnit,
-  )}). Apakah masih tersedia?`;
+  const priceSummary = lines.map((l) => `${l.label} ${l.value}`).join(" / ");
+  const waMessage = `Halo ${agentName}, saya tertarik dengan properti "${listing.title}"${
+    priceSummary ? ` (${priceSummary})` : ""
+  }. Apakah masih tersedia?`;
   const waHref = waLinkWith(settings.waNumber, waMessage);
 
   return (
@@ -104,14 +109,17 @@ export default async function ListingDetail({
         >
           <IconArrowLeft width={20} height={20} />
         </Link>
-        {authed && (
-          <Link
-            href={`/admin/edit/${listing.id}`}
-            className="glass-strong absolute right-3 top-3 z-20 flex h-11 items-center gap-1.5 rounded-full px-3.5 text-sm font-semibold"
-          >
-            <IconEdit width={16} height={16} /> Edit
-          </Link>
-        )}
+        <div className="absolute right-3 top-3 z-20 flex items-center gap-2">
+          {authed && (
+            <Link
+              href={`/admin/edit/${listing.id}`}
+              className="glass-strong flex h-11 items-center gap-1.5 rounded-full px-3.5 text-sm font-semibold"
+            >
+              <IconEdit width={16} height={16} /> Edit
+            </Link>
+          )}
+          <ShareButton title={listing.title} text={priceSummary || undefined} />
+        </div>
       </div>
 
       <div className="lg:grid lg:grid-cols-3 lg:items-start lg:gap-6">
@@ -119,13 +127,16 @@ export default async function ListingDetail({
         <div className="space-y-5 lg:col-span-2">
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <span
-                className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${
-                  listing.listingType === "sewa" ? "bg-foreground text-background" : "bg-accent text-accent-ink"
-                }`}
-              >
-                {LISTING_TYPE_LABELS[listing.listingType]}
-              </span>
+              {pricing.forSale && (
+                <span className="rounded-full bg-accent px-2.5 py-1 text-[11px] font-bold text-accent-ink">
+                  Dijual
+                </span>
+              )}
+              {pricing.forRent && (
+                <span className="rounded-full bg-foreground px-2.5 py-1 text-[11px] font-bold text-background">
+                  Disewa
+                </span>
+              )}
               <span className="chip rounded-full px-2.5 py-1 text-[11px] font-medium">
                 {PROPERTY_TYPE_LABELS[listing.propertyType]}
               </span>
@@ -140,10 +151,19 @@ export default async function ListingDetail({
               <IconPin width={16} height={16} />
               {locationLabel(listing) || "Lokasi belum diisi"}
             </p>
-            <div className="mt-3 text-[26px] font-bold lg:hidden">
-              {formatPrice(listing.price, listing.priceUnit)}
+            <div className="mt-3 lg:hidden">
+              <div className="flex flex-wrap items-baseline gap-x-5 gap-y-1">
+                {lines.map((l) => (
+                  <div key={l.kind}>
+                    <span className="mr-1.5 text-xs font-semibold uppercase text-[color:var(--muted)]">
+                      {l.label}
+                    </span>
+                    <span className="text-[26px] font-bold">{l.value}</span>
+                  </div>
+                ))}
+              </div>
               {listing.negotiable && (
-                <span className="ml-2 align-middle text-sm font-medium text-[color:var(--muted)]">(nego)</span>
+                <span className="text-sm font-medium text-[color:var(--muted)]">(nego)</span>
               )}
             </div>
           </div>
@@ -207,17 +227,27 @@ export default async function ListingDetail({
               </div>
             </div>
           )}
+
+          {/* Nearby access */}
+          <NearbySection items={listing.nearby} />
         </div>
 
         {/* Right: sticky contact card */}
         <div className="mt-6 lg:col-span-1 lg:mt-0 lg:sticky lg:top-24">
           <div className="glass space-y-4 rounded-[26px] p-5">
             <div className="hidden lg:block">
-              <div className="text-2xl font-bold">
-                {formatPrice(listing.price, listing.priceUnit)}
+              <div className="space-y-1">
+                {lines.map((l) => (
+                  <div key={l.kind} className="flex items-baseline justify-between gap-2">
+                    <span className="text-xs font-semibold uppercase text-[color:var(--muted)]">
+                      {l.label}
+                    </span>
+                    <span className="text-2xl font-bold">{l.value}</span>
+                  </div>
+                ))}
               </div>
               {listing.negotiable && (
-                <div className="text-xs font-medium text-[color:var(--muted)]">Harga nego</div>
+                <div className="mt-1 text-xs font-medium text-[color:var(--muted)]">Harga nego</div>
               )}
             </div>
 
