@@ -97,7 +97,7 @@ type TabKey = "fasilitas" | "keunggulan" | "lokasi";
 const LABELS: Record<TabKey, string> = {
   fasilitas: "Fasilitas",
   keunggulan: "Keunggulan",
-  lokasi: "Lokasi",
+  lokasi: "Sekitar",
 };
 
 export function PropertyTabs({
@@ -140,7 +140,7 @@ export function PropertyTabs({
         </div>
       ) : (
         <h2 className="mb-3 text-base font-bold">
-          {cur === "lokasi" ? "Lokasi & Tempat Sekitar" : `${LABELS[cur]} Properti`}
+          {cur === "lokasi" ? "Area Sekitar" : `${LABELS[cur]} Properti`}
         </h2>
       )}
 
@@ -150,12 +150,10 @@ export function PropertyTabs({
             const Icon = AMENITY_ICON[amenityIconKey(name)];
             return (
               <div key={i} className="flex items-center gap-2.5">
-                <Icon
-                  width={19}
-                  height={19}
-                  className="shrink-0 text-[color:var(--foreground)]/80"
-                />
-                <span className="text-[13px] font-medium leading-tight">{name}</span>
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent/15 text-[color:var(--foreground)]">
+                  <Icon width={16} height={16} />
+                </span>
+                <span className="text-sm leading-tight">{name}</span>
               </div>
             );
           })}

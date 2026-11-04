@@ -144,7 +144,7 @@ export const LISTING_TYPE_LABELS: Record<ListingType, string> = {
 };
 
 export const NEARBY_CATEGORY_LABELS: Record<NearbyCategory, string> = {
-  swalayan: "Swalayan",
+  swalayan: "Belanja",
   rumah_sakit: "Rumah Sakit",
   sekolah: "Sekolah",
   transportasi: "Transportasi",

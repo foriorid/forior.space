@@ -708,14 +708,14 @@ export function ListingEditor({ existing }: { existing?: Listing }) {
       <Section title="Lokasi & Tempat Sekitar">
         <Field
           label="Satu tempat per baris — format: Kategori | Nama | Waktu"
-          hint="Kategori: Swalayan, Rumah Sakit, Sekolah, Transportasi, Kuliner, Ibadah, Rekreasi, Lainnya"
+          hint="Kategori: Belanja, Rumah Sakit, Sekolah, Transportasi, Kuliner, Ibadah, Rekreasi, Lainnya"
         >
           <textarea
             value={nearbyText}
             onChange={(e) => setNearbyText(e.target.value)}
             rows={5}
             className={inputCls}
-            placeholder={"Swalayan | Superindo | 5 menit\nRumah Sakit | RS Pondok Indah | 10 menit\nSekolah | SD Al Azhar | 7 menit\nTransportasi | Gerbang Tol JORR | 3 menit"}
+            placeholder={"Belanja | Superindo | 5 menit\nRumah Sakit | RS Pondok Indah | 10 menit\nSekolah | SD Al Azhar | 7 menit\nTransportasi | Gerbang Tol JORR | 3 menit"}
           />
         </Field>
       </Section>
