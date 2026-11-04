@@ -1,18 +1,25 @@
 import Link from "next/link";
+import type { ComponentType, SVGProps } from "react";
 import { getListings } from "@/lib/store";
 import { ListingCard } from "@/components/ListingCard";
-import { IconSearch } from "@/components/icons";
+import {
+  IconSearch,
+  IconHome,
+  IconBuilding,
+  IconStore,
+  IconLandscape,
+} from "@/components/icons";
 import { site } from "@/lib/site";
 import { PROPERTY_TYPE_LABELS, type PropertyType } from "@/lib/types";
 
 // Cached/edge-served; refreshed on write via revalidatePath("/").
 export const revalidate = 60;
 
-const CATEGORIES: { type: PropertyType; emoji: string }[] = [
-  { type: "rumah", emoji: "🏡" },
-  { type: "apartemen", emoji: "🏢" },
-  { type: "ruko", emoji: "🏬" },
-  { type: "tanah", emoji: "🌳" },
+const CATEGORIES: { type: PropertyType; Icon: ComponentType<SVGProps<SVGSVGElement>> }[] = [
+  { type: "rumah", Icon: IconHome },
+  { type: "apartemen", Icon: IconBuilding },
+  { type: "ruko", Icon: IconStore },
+  { type: "tanah", Icon: IconLandscape },
 ];
 
 export default async function HomePage() {
@@ -20,19 +27,24 @@ export default async function HomePage() {
 
   return (
     <div className="space-y-6">
-      {/* Hero */}
-      <section className="animate-fade-up relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[#141d30] to-[#070b16] p-5 text-white shadow-xl">
-        <div className="pointer-events-none absolute -right-10 -top-12 h-40 w-40 rounded-full bg-accent/30 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-16 -left-10 h-40 w-40 rounded-full bg-violet/30 blur-3xl" />
-        <div className="relative">
-          <p className="text-sm font-medium text-white/70">Halo! 👋</p>
+      {/* Hero — bright */}
+      <section className="animate-fade-up relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[#e8f8c7] via-[#f3f8ea] to-[#e6edfb] p-5 shadow-lg ring-1 ring-black/5">
+        <div className="pointer-events-none absolute -right-10 -top-12 h-40 w-40 rounded-full bg-accent/50 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-16 -left-8 h-40 w-40 rounded-full bg-violet/25 blur-3xl" />
+        <div className="relative text-[#0d1220]">
+          <p className="text-sm font-medium text-[#0d1220]/60">Halo! 👋</p>
           <h1 className="mt-1 text-[26px] font-bold leading-tight">
-            Temukan <span className="text-accent">ruang</span> terbaikmu
+            Temukan{" "}
+            <span className="relative inline-block">
+              <span className="relative z-10">ruang</span>
+              <span className="absolute inset-x-0 bottom-1 -z-0 h-3 rounded bg-accent/70" />
+            </span>{" "}
+            terbaikmu
           </h1>
-          <p className="mt-1.5 text-sm text-white/70">{site.tagline}</p>
+          <p className="mt-1.5 text-sm text-[#0d1220]/60">{site.tagline}</p>
           <Link
             href="/cari"
-            className="press mt-4 flex items-center gap-2 rounded-2xl border border-white/15 bg-white/10 px-4 py-3 text-sm font-medium text-white/80 backdrop-blur-md"
+            className="press mt-4 flex items-center gap-2 rounded-2xl border border-black/10 bg-white/85 px-4 py-3 text-sm font-medium text-[#0d1220]/55 shadow-sm backdrop-blur-md"
           >
             <IconSearch width={18} height={18} />
             Cari lokasi, tipe, atau harga…
@@ -40,16 +52,18 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Categories */}
+      {/* Categories — minimalist icons */}
       <section className="grid grid-cols-4 gap-2.5">
-        {CATEGORIES.map((cat) => (
+        {CATEGORIES.map(({ type, Icon }) => (
           <Link
-            key={cat.type}
-            href={`/cari?tipe=${cat.type}`}
-            className="press glass flex flex-col items-center gap-1.5 rounded-2xl p-3 text-center"
+            key={type}
+            href={`/cari?tipe=${type}`}
+            className="press glass flex flex-col items-center gap-2 rounded-2xl p-3 text-center"
           >
-            <span className="text-2xl" aria-hidden>{cat.emoji}</span>
-            <span className="text-[11px] font-semibold">{PROPERTY_TYPE_LABELS[cat.type]}</span>
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-accent/15 text-[color:var(--foreground)]">
+              <Icon width={20} height={20} />
+            </span>
+            <span className="text-[11px] font-semibold">{PROPERTY_TYPE_LABELS[type]}</span>
           </Link>
         ))}
       </section>

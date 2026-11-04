@@ -20,6 +20,31 @@ export const IconHome = (p: P) => (
   </svg>
 );
 
+export const IconBuilding = (p: P) => (
+  <svg {...base} {...p}>
+    <rect x="5" y="3" width="14" height="18" rx="1.5" />
+    <path d="M9 7h2M13 7h2M9 11h2M13 11h2M9 15h2M13 15h2" />
+    <path d="M10 21v-3h4v3" />
+  </svg>
+);
+
+export const IconStore = (p: P) => (
+  <svg {...base} {...p}>
+    <path d="M4 10l1.2-4.2A1.5 1.5 0 0 1 6.6 4.7h10.8a1.5 1.5 0 0 1 1.4 1.1L20 10" />
+    <path d="M4 10a2 2 0 0 0 4 0 2 2 0 0 0 4 0 2 2 0 0 0 4 0 2 2 0 0 0 4 0" />
+    <path d="M5 11v9h14v-9" />
+    <path d="M9.5 20v-4.5h5V20" />
+  </svg>
+);
+
+export const IconLandscape = (p: P) => (
+  <svg {...base} {...p}>
+    <circle cx="7.5" cy="8" r="2" />
+    <path d="M3 20h18" />
+    <path d="M3 17.5l4-5 3.5 3.5 3.5-4.5 7 6" />
+  </svg>
+);
+
 export const IconSearch = (p: P) => (
   <svg {...base} {...p}>
     <circle cx="11" cy="11" r="7" />

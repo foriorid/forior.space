@@ -84,7 +84,19 @@ Keluarkan HANYA objek JSON valid (tanpa markdown, tanpa penjelasan) dengan field
   ejaan baku/EYD, spasi rapi (satu spasi), JANGAN ALL CAPS, maksimal ~70 karakter.
   Hanya masukkan komponen yang memang diketahui dari pesan — jangan mengarang.
   Contoh Hot Offering: "Murah", "Nego", "Siap Huni", "Harga BU", "Dekat MRT".
-- description: deskripsi rapi 2-4 kalimat, enak dibaca calon pembeli, rangkum poin penting dari pesan
+- description: deskripsi listing yang RAPI & TERSTRUKTUR memakai baris baru (\n), BUKAN satu paragraf panjang. Susun persis seperti pola ini:
+    Baris 1 (judul, awali huruf kapital): "DIJUAL/DISEWA [jenis properti + gaya/tipe singkat] di [Lokasi]"
+    (baris kosong)
+    1-2 kalimat pembuka singkat yang menjual (opsional).
+    (baris kosong)
+    "Spesifikasi Utama Properti:" lalu daftar berpoin "- " satu item per baris — HANYA yang disebut di pesan. Contoh item: "- Luas Tanah 468 m2", "- Luas Bangunan 550 m2", "- 2 Lantai", "- Kamar Tidur: 3", "- Kamar Mandi: 2", "- Sertifikat: SHM", "- Daya Listrik: 16000 W", "- Arah Bangunan: Menghadap Barat", "- Kondisi Perabotan: Semi Furnished", "- Carport untuk 6 mobil".
+    (baris kosong)
+    "Fasilitas:" (atau "Fasilitas terdekat:") lalu daftar berpoin "- " (jika ada di pesan).
+    (baris kosong, jika ada)
+    "Keterangan lainnya:" dengan poin "- " (jika ada, mis. "- Tangan Pertama", "- Cocok untuk investasi").
+    (baris kosong)
+    Baris terakhir: "Harga Rp [jumlah] (Nego)" — tulis "(Nego)" hanya bila memang nego.
+  Aturan: bahasa Indonesia baku; JANGAN mengarang data yang tidak ada; JANGAN memasukkan nomor kontak/WA owner ke dalam deskripsi.
 - price: harga dalam Rupiah sebagai ANGKA bulat (contoh 2500000000 untuk 2,5 M, 15000000 untuk 15 juta). null jika tidak disebut
 - priceUnit: "total" untuk harga jual/total, "per_bulan" atau "per_tahun" untuk sewa
 - negotiable: true jika disebut nego/negotiable
