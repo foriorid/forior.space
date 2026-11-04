@@ -41,8 +41,15 @@ export interface ParseResult {
 
 const MODEL = process.env.ANTHROPIC_MODEL || "claude-haiku-5-5";
 
+// Every field uses `.catch(...)` so a model that returns null or an unexpected
+// value for an optional field (e.g. rentUnit:null on a jual-only listing) never
+// throws — it falls back to the safe default and normalize() reconciles it.
+const zNum = () => z.number().nullable().catch(null);
+const zInt = () => z.number().int().nullable().catch(null);
+const zStr = () => z.string().catch("");
+
 const parsedSchema = z.object({
-  listingType: z.enum(["jual", "sewa"]).default("jual"),
+  listingType: z.enum(["jual", "sewa"]).catch("jual"),
   propertyType: z
     .enum([
       "rumah",
@@ -56,50 +63,52 @@ const parsedSchema = z.object({
       "gedung",
       "lainnya",
     ])
-    .default("rumah"),
-  title: z.string().default(""),
-  description: z.string().default(""),
-  price: z.number().nullable().default(null),
-  priceUnit: z.enum(["total", "per_bulan", "per_tahun"]).default("total"),
-  negotiable: z.boolean().default(false),
-  forSale: z.boolean().default(false),
-  forRent: z.boolean().default(false),
-  salePrice: z.number().nullable().default(null),
-  rentPrice: z.number().nullable().default(null),
-  rentUnit: z.enum(["per_bulan", "per_tahun"]).default("per_bulan"),
+    .catch("rumah"),
+  title: zStr(),
+  description: zStr(),
+  price: zNum(),
+  priceUnit: z.enum(["total", "per_bulan", "per_tahun"]).catch("total"),
+  negotiable: z.boolean().catch(false),
+  forSale: z.boolean().catch(false),
+  forRent: z.boolean().catch(false),
+  salePrice: zNum(),
+  rentPrice: zNum(),
+  rentUnit: z.enum(["per_bulan", "per_tahun"]).catch("per_bulan"),
   nearby: z
     .array(
-      z.object({
-        category: z
-          .enum([
-            "swalayan",
-            "rumah_sakit",
-            "sekolah",
-            "transportasi",
-            "kuliner",
-            "ibadah",
-            "rekreasi",
-            "lainnya",
-          ])
-          .default("lainnya"),
-        name: z.string().default(""),
-        time: z.string().default(""),
-      }),
+      z
+        .object({
+          category: z
+            .enum([
+              "swalayan",
+              "rumah_sakit",
+              "sekolah",
+              "transportasi",
+              "kuliner",
+              "ibadah",
+              "rekreasi",
+              "lainnya",
+            ])
+            .catch("lainnya"),
+          name: zStr(),
+          time: zStr(),
+        })
+        .catch({ category: "lainnya", name: "", time: "" }),
     )
-    .default([]),
-  bedrooms: z.number().int().nullable().default(null),
-  bathrooms: z.number().int().nullable().default(null),
-  landArea: z.number().nullable().default(null),
-  buildingArea: z.number().nullable().default(null),
-  floors: z.number().int().nullable().default(null),
-  carports: z.number().int().nullable().default(null),
+    .catch([]),
+  bedrooms: zInt(),
+  bathrooms: zInt(),
+  landArea: zNum(),
+  buildingArea: zNum(),
+  floors: zInt(),
+  carports: zInt(),
   certificate: z
     .enum(["SHM", "HGB", "SHGB", "Girik", "PPJB", "Strata", "Lainnya", ""])
-    .default(""),
-  furnished: z.enum(["unfurnished", "semi", "full", ""]).default(""),
-  address: z.string().default(""),
-  city: z.string().default(""),
-  facilities: z.array(z.string()).default([]),
+    .catch(""),
+  furnished: z.enum(["unfurnished", "semi", "full", ""]).catch(""),
+  address: zStr(),
+  city: zStr(),
+  facilities: z.array(z.string().catch("")).catch([]),
 });
 
 export function hasApiKey(): boolean {
