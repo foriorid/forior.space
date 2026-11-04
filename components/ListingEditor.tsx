@@ -108,6 +108,8 @@ export function ListingEditor({ existing }: { existing?: Listing }) {
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [reprocessing, setReprocessing] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
 
   const fileInput = useRef<HTMLInputElement>(null);
   const addFileInput = useRef<HTMLInputElement>(null);
@@ -144,10 +146,7 @@ export function ListingEditor({ existing }: { existing?: Listing }) {
       const res = await fetch("/api/parse", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message,
-          imageNames: uploaded.map((u) => u.id),
-        }),
+        body: JSON.stringify({ message, images: uploaded }),
       });
       if (!res.ok) throw new Error("Gagal memproses pesan");
       const data = await res.json();
@@ -157,11 +156,44 @@ export function ListingEditor({ existing }: { existing?: Listing }) {
       setNearbyText(serializeNearby(parsed.nearby));
       setImages(uploaded);
       setUsedAi(Boolean(data.usedAi));
+      setAiError(data.aiError ?? null);
       setPhase("form");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Terjadi kesalahan");
     } finally {
       setProcessing(false);
+    }
+  }
+
+  // Re-run the AI on the current chat text (+ photos). Works for any listing,
+  // including ones already published — overwrites the structured fields only,
+  // keeping the uploaded photos.
+  async function rerunAi() {
+    setError("");
+    setAiError(null);
+    if (!message.trim() && images.length === 0) {
+      setError("Isi dulu teks chat properti untuk dirapikan AI.");
+      return;
+    }
+    setReprocessing(true);
+    try {
+      const res = await fetch("/api/parse", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message, images }),
+      });
+      if (!res.ok) throw new Error("Gagal memproses");
+      const data = await res.json();
+      const parsed = data.parsed as ParsedListing;
+      setForm(toForm(parsed));
+      setFacilitiesText((parsed.facilities ?? []).join(", "));
+      setNearbyText(serializeNearby(parsed.nearby));
+      setUsedAi(Boolean(data.usedAi));
+      setAiError(data.aiError ?? null);
+    } catch (err) {
+      setAiError(err instanceof Error ? err.message : "Gagal memproses");
+    } finally {
+      setReprocessing(false);
     }
   }
 
@@ -327,17 +359,53 @@ export function ListingEditor({ existing }: { existing?: Listing }) {
         </button>
       )}
 
-      {usedAi === false && (
+      {aiError ? (
+        <div className="rounded-xl bg-red-50 p-3 text-xs text-red-700 ring-1 ring-red-200">
+          <div className="font-bold">⚠️ AI gagal merapikan listing</div>
+          <div className="mt-0.5">
+            Memakai parser sederhana — judul/deskripsi/akses sekitar mungkin kurang rapi.
+            Coba tekan “Rapikan ulang pakai AI” lagi, atau rapikan manual di bawah.
+          </div>
+          <div className="mt-1 break-words font-mono text-[10px] opacity-70">{aiError}</div>
+        </div>
+      ) : usedAi === false ? (
         <div className="rounded-xl bg-amber-50 p-3 text-xs text-amber-800 ring-1 ring-amber-200">
           Diproses tanpa AI (parser sederhana). Mohon periksa & lengkapi data di
           bawah.
         </div>
-      )}
-      {usedAi === true && (
+      ) : usedAi === true ? (
         <div className="rounded-xl bg-emerald-50 p-3 text-xs text-emerald-800 ring-1 ring-emerald-200">
           ✨ Berhasil dirapikan AI. Periksa & edit bila perlu, lalu publish.
         </div>
-      )}
+      ) : null}
+
+      {/* AI re-run — works even for already-published listings */}
+      <Section title="Rapikan dengan AI">
+        <Field
+          label="Teks chat properti (sumber AI)"
+          hint="Edit teksnya bila perlu, lalu tekan tombol di bawah untuk merapikan ulang."
+        >
+          <textarea
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            rows={5}
+            className={inputCls}
+            placeholder={"Tempel/ubah detail properti gaya chat WA di sini…"}
+          />
+        </Field>
+        <button
+          onClick={rerunAi}
+          disabled={reprocessing}
+          className="btn-accent press flex w-full items-center justify-center gap-2 rounded-2xl py-3 text-sm font-bold disabled:opacity-60"
+        >
+          <IconSparkles width={18} height={18} />
+          {reprocessing ? "Merapikan…" : "✨ Rapikan ulang pakai AI"}
+        </button>
+        <p className="text-xs text-[color:var(--muted)]">
+          Mengisi ulang judul, deskripsi, spesifikasi & “Fasilitas Akses Sekitar”.
+          Foto tidak berubah.
+        </p>
+      </Section>
 
       {/* Photos */}
       <Section title="Foto">

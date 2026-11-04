@@ -25,8 +25,18 @@ function titleCase(s: string): string {
  */
 
 export interface ParseImage {
-  base64: string;
-  mime: string;
+  base64?: string;
+  mime?: string;
+  /** Public URL (used in Supabase mode where photos are served from storage). */
+  url?: string;
+}
+
+export interface ParseResult {
+  parsed: ParsedListing;
+  /** True only when the AI call actually succeeded. */
+  usedAi: boolean;
+  /** Human-readable reason when the AI was expected to run but failed. */
+  error?: string;
 }
 
 const MODEL = process.env.ANTHROPIC_MODEL || "claude-haiku-5-5";
@@ -155,53 +165,137 @@ Aturan harga Indonesia: "M"/"miliar" = 1.000.000.000 ; "jt"/"juta" = 1.000.000 ;
 Contoh: "2,5M" -> 2500000000 ; "850jt" -> 850000000 ; "15 juta/bulan" -> price 15000000, priceUnit "per_bulan".
 Jika suatu data tidak ada di pesan, isi null / "" / [] sesuai tipe. Jangan mengarang data penting (harga, luas) yang tidak disebut.`;
 
+// Tool schema: by having Claude return data as a tool call, the SDK hands us a
+// parsed object directly — no fragile JSON.parse on model text (which broke on
+// multi-line descriptions containing literal newlines).
+const nullableNumber = { type: ["number", "null"] as const };
+const LISTING_TOOL = {
+  name: "simpan_listing",
+  description:
+    "Simpan data listing properti yang sudah terstruktur dari pesan agen.",
+  input_schema: {
+    type: "object" as const,
+    properties: {
+      listingType: { type: "string", enum: ["jual", "sewa"] },
+      propertyType: {
+        type: "string",
+        enum: [
+          "rumah", "apartemen", "ruko", "tanah", "gudang", "kost", "villa",
+          "ruang_usaha", "gedung", "lainnya",
+        ],
+      },
+      title: { type: "string" },
+      description: { type: "string" },
+      price: nullableNumber,
+      priceUnit: { type: "string", enum: ["total", "per_bulan", "per_tahun"] },
+      negotiable: { type: "boolean" },
+      forSale: { type: "boolean" },
+      forRent: { type: "boolean" },
+      salePrice: nullableNumber,
+      rentPrice: nullableNumber,
+      rentUnit: { type: "string", enum: ["per_bulan", "per_tahun"] },
+      nearby: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            category: {
+              type: "string",
+              enum: [
+                "swalayan", "rumah_sakit", "sekolah", "transportasi",
+                "kuliner", "ibadah", "rekreasi", "lainnya",
+              ],
+            },
+            name: { type: "string" },
+            time: { type: "string" },
+          },
+          required: ["category", "name", "time"],
+        },
+      },
+      bedrooms: nullableNumber,
+      bathrooms: nullableNumber,
+      landArea: nullableNumber,
+      buildingArea: nullableNumber,
+      floors: nullableNumber,
+      carports: nullableNumber,
+      certificate: {
+        type: "string",
+        enum: ["SHM", "HGB", "SHGB", "Girik", "PPJB", "Strata", "Lainnya", ""],
+      },
+      furnished: { type: "string", enum: ["unfurnished", "semi", "full", ""] },
+      address: { type: "string" },
+      city: { type: "string" },
+      facilities: { type: "array", items: { type: "string" } },
+    },
+    required: ["title", "description", "propertyType"],
+  },
+};
+
+const IMG_MIMES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+
 export async function parseMessage(
   message: string,
   images: ParseImage[] = [],
-): Promise<ParsedListing> {
+): Promise<ParseResult> {
   if (!hasApiKey()) {
-    return fallbackParse(message);
+    return { parsed: fallbackParse(message), usedAi: false };
   }
 
   const client = new Anthropic();
 
   const content: Anthropic.ContentBlockParam[] = [];
   for (const img of images.slice(0, 6)) {
-    const mediaType = (
-      ["image/jpeg", "image/png", "image/webp", "image/gif"].includes(img.mime)
-        ? img.mime
-        : "image/jpeg"
-    ) as "image/jpeg" | "image/png" | "image/webp" | "image/gif";
-    content.push({
-      type: "image",
-      source: { type: "base64", media_type: mediaType, data: img.base64 },
-    });
+    if (img.url) {
+      content.push({ type: "image", source: { type: "url", url: img.url } });
+    } else if (img.base64) {
+      const mediaType = (
+        img.mime && IMG_MIMES.includes(img.mime) ? img.mime : "image/jpeg"
+      ) as "image/jpeg" | "image/png" | "image/webp" | "image/gif";
+      content.push({
+        type: "image",
+        source: { type: "base64", media_type: mediaType, data: img.base64 },
+      });
+    }
   }
   content.push({
     type: "text",
-    text: `Pesan dari agen:\n"""\n${message}\n"""\n\nKeluarkan JSON listing sekarang.`,
+    text: `Pesan dari agen:\n"""\n${message}\n"""\n\nRapikan jadi data listing, lalu panggil tool simpan_listing dengan datanya.`,
   });
 
   try {
     const response = await client.messages.create({
       model: MODEL,
-      max_tokens: 1500,
+      max_tokens: 2000,
       system: SYSTEM_PROMPT,
-      output_config: { effort: "low" },
+      // Disable thinking: forced tool_choice is incompatible with thinking on
+      // some models, and this is a straightforward extraction task.
+      thinking: { type: "disabled" },
+      tools: [LISTING_TOOL as unknown as Anthropic.Tool],
+      tool_choice: { type: "tool", name: "simpan_listing" },
       messages: [{ role: "user", content }],
-    });
+    } as Anthropic.MessageCreateParamsNonStreaming);
 
-    const text = response.content
-      .filter((b): b is Anthropic.TextBlock => b.type === "text")
-      .map((b) => b.text)
-      .join("\n");
+    // Prefer the structured tool call; fall back to parsing text JSON.
+    const toolBlock = response.content.find(
+      (b): b is Anthropic.ToolUseBlock => b.type === "tool_use",
+    );
+    let raw: unknown;
+    if (toolBlock) {
+      raw = toolBlock.input;
+    } else {
+      const text = response.content
+        .filter((b): b is Anthropic.TextBlock => b.type === "text")
+        .map((b) => b.text)
+        .join("\n");
+      raw = extractJson(text);
+    }
 
-    const json = extractJson(text);
-    const parsed = parsedSchema.parse(json);
-    return normalize(parsed, message);
+    const parsed = parsedSchema.parse(raw);
+    return { parsed: normalize(parsed, message), usedAi: true };
   } catch (err) {
-    console.error("[parse] Claude parse failed, using fallback:", err);
-    return fallbackParse(message);
+    const reason = err instanceof Error ? err.message : String(err);
+    console.error("[parse] Claude parse failed, using fallback:", reason);
+    return { parsed: fallbackParse(message), usedAi: false, error: reason };
   }
 }
 
