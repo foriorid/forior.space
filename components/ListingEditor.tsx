@@ -110,6 +110,10 @@ export function ListingEditor({ existing }: { existing?: Listing }) {
   const [error, setError] = useState("");
   const [reprocessing, setReprocessing] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
+  const [buildingName, setBuildingName] = useState(existing?.title ?? "");
+  const [enriching, setEnriching] = useState(false);
+  const [enrichNote, setEnrichNote] = useState<string | null>(null);
+  const [enrichError, setEnrichError] = useState<string | null>(null);
 
   const fileInput = useRef<HTMLInputElement>(null);
   const addFileInput = useRef<HTMLInputElement>(null);
@@ -194,6 +198,79 @@ export function ListingEditor({ existing }: { existing?: Listing }) {
       setAiError(err instanceof Error ? err.message : "Gagal memproses");
     } finally {
       setReprocessing(false);
+    }
+  }
+
+  // Look up facilities + nearby places for a building from the web (cached per
+  // building so the same apartment is free the next time).
+  async function enrichFromWeb(forceRefresh = false) {
+    setEnrichError(null);
+    setEnrichNote(null);
+    const b = buildingName.trim();
+    if (!b) {
+      setEnrichError("Isi nama apartemen/gedung dulu.");
+      return;
+    }
+    setEnriching(true);
+    try {
+      const res = await fetch("/api/enrich", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          building: b,
+          city: form.city,
+          hint: message.slice(0, 600),
+          forceRefresh,
+        }),
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        throw new Error(d.error || "Gagal mencari");
+      }
+      const data = await res.json();
+      if (data.aiError) {
+        setEnrichError(data.aiError);
+        return;
+      }
+      const facNew: string[] = data.facilities || [];
+      const nearNew: { category: string; name: string; time: string }[] =
+        data.nearby || [];
+      if (facNew.length === 0 && nearNew.length === 0) {
+        setEnrichNote(
+          "Tidak ada data ditemukan. Coba nama gedung yang lebih spesifik atau lengkapi kotanya.",
+        );
+        return;
+      }
+      // Merge facilities (unique, case-insensitive).
+      const existingFac = facilitiesText
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+      const mergedFac = [...existingFac];
+      for (const f of facNew) {
+        if (f.trim() && !mergedFac.some((x) => x.toLowerCase() === f.toLowerCase())) {
+          mergedFac.push(f.trim());
+        }
+      }
+      setFacilitiesText(mergedFac.join(", "));
+      // Merge nearby (dedupe by name).
+      const existingNear = parseNearby(nearbyText);
+      const merged = [...existingNear];
+      for (const n of nearNew) {
+        if (n.name?.trim() && !merged.some((x) => x.name.toLowerCase() === n.name.toLowerCase())) {
+          merged.push(n as (typeof merged)[number]);
+        }
+      }
+      setNearbyText(serializeNearby(merged));
+      setEnrichNote(
+        data.cached
+          ? "✓ Diambil dari data tersimpan (tanpa biaya pencarian)."
+          : "✓ Hasil pencarian web. Periksa & sunting bila perlu sebelum publish.",
+      );
+    } catch (err) {
+      setEnrichError(err instanceof Error ? err.message : "Gagal mencari");
+    } finally {
+      setEnriching(false);
     }
   }
 
@@ -564,6 +641,47 @@ export function ListingEditor({ existing }: { existing?: Listing }) {
         <Field label="Fasilitas (pisahkan dengan koma)" hint="cth: Dekat tol, Carport 2 mobil, SHM">
           <input value={facilitiesText} onChange={(e) => setFacilitiesText(e.target.value)} className={inputCls} placeholder="Dekat tol, Carport, Security 24 jam" />
         </Field>
+      </Section>
+
+      <Section title="Lengkapi Otomatis dari Web">
+        <Field
+          label="Nama apartemen / gedung"
+          hint="AI cari fasilitas & tempat sekitar dari web, lalu isi ke kolom di bawah. Hasil disimpan per gedung — gedung yang sama berikutnya gratis."
+        >
+          <input
+            value={buildingName}
+            onChange={(e) => setBuildingName(e.target.value)}
+            className={inputCls}
+            placeholder="mis. Apartemen Taman Anggrek"
+          />
+        </Field>
+        <div className="flex gap-2">
+          <button
+            onClick={() => enrichFromWeb(false)}
+            disabled={enriching}
+            className="btn-accent press flex-1 rounded-2xl py-3 text-sm font-bold disabled:opacity-60"
+          >
+            {enriching ? "Mencari…" : "🔎 Lengkapi otomatis"}
+          </button>
+          <button
+            onClick={() => enrichFromWeb(true)}
+            disabled={enriching}
+            title="Cari ulang dari web (abaikan data tersimpan)"
+            className="press rounded-2xl border border-line bg-surface/60 px-4 py-3 text-sm font-semibold disabled:opacity-60"
+          >
+            Cari ulang
+          </button>
+        </div>
+        {enrichNote && (
+          <p className="text-xs font-medium text-emerald-600">{enrichNote}</p>
+        )}
+        {enrichError && (
+          <p className="text-xs font-medium text-red-600">⚠️ {enrichError}</p>
+        )}
+        <p className="text-xs text-[color:var(--muted)]">
+          Memakai token + pencarian web (sekali per gedung; berikutnya diambil
+          dari data tersimpan, gratis).
+        </p>
       </Section>
 
       <Section title="Fasilitas Akses Sekitar">

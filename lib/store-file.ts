@@ -150,6 +150,41 @@ export async function updateSettings(patch: Partial<Settings>): Promise<Settings
   return next;
 }
 
+// ---- Place enrichment cache (facilities + nearby, keyed per building) ----
+
+const ENRICH_FILE = path.join(DATA_DIR, "enrichment.json");
+
+async function readEnrichAll(): Promise<Record<string, import("./enrich").EnrichmentData>> {
+  await ensureDirs();
+  try {
+    return JSON.parse(await fs.readFile(ENRICH_FILE, "utf8"));
+  } catch {
+    return {};
+  }
+}
+
+export async function getEnrichment(
+  key: string,
+): Promise<import("./enrich").EnrichmentData | null> {
+  const all = await readEnrichAll();
+  return all[key] ?? null;
+}
+
+export async function saveEnrichment(
+  key: string,
+  _building: string,
+  _city: string,
+  data: import("./enrich").EnrichmentData,
+): Promise<void> {
+  void _building;
+  void _city;
+  const all = await readEnrichAll();
+  all[key] = data;
+  const tmp = ENRICH_FILE + ".tmp";
+  await fs.writeFile(tmp, JSON.stringify(all, null, 2), "utf8");
+  await fs.rename(tmp, ENRICH_FILE);
+}
+
 // ---- Image storage ----
 
 const EXT_BY_MIME: Record<string, string> = {

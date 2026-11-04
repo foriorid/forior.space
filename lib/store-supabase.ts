@@ -151,6 +151,49 @@ export async function updateSettings(patch: Partial<Settings>): Promise<Settings
   return next;
 }
 
+// ---- Place enrichment cache (facilities + nearby, keyed per building) ----
+
+const ENRICH_TABLE = "place_enrichment";
+
+export async function getEnrichment(
+  key: string,
+): Promise<import("./enrich").EnrichmentData | null> {
+  try {
+    const sb = getSupabaseAdmin();
+    const { data, error } = await sb
+      .from(ENRICH_TABLE)
+      .select("doc")
+      .eq("id", key)
+      .maybeSingle();
+    if (error) throw error;
+    return data ? (data as { doc: import("./enrich").EnrichmentData }).doc : null;
+  } catch (err) {
+    console.error("[store-supabase] getEnrichment failed:", err);
+    return null;
+  }
+}
+
+export async function saveEnrichment(
+  key: string,
+  building: string,
+  city: string,
+  data: import("./enrich").EnrichmentData,
+): Promise<void> {
+  try {
+    const sb = getSupabaseAdmin();
+    const { error } = await sb.from(ENRICH_TABLE).upsert({
+      id: key,
+      building,
+      city,
+      doc: data,
+      updated_at: new Date().toISOString(),
+    });
+    if (error) throw error;
+  } catch (err) {
+    console.error("[store-supabase] saveEnrichment failed:", err);
+  }
+}
+
 // ---- Image storage ----
 
 export async function saveImage(

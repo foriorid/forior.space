@@ -54,3 +54,5 @@ export const updateSettings = impl.updateSettings;
 export const defaultSettings = impl.defaultSettings;
 export const saveImage = impl.saveImage;
 export const readImage = impl.readImage;
+export const getEnrichment = impl.getEnrichment;
+export const saveEnrichment = impl.saveEnrichment;
