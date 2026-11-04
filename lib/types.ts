@@ -159,4 +159,6 @@ export interface Settings {
   agentName: string;
   /** WhatsApp number, stored in international digits, e.g. "6281379097488". */
   waNumber: string;
+  /** Profile photo URL; empty/absent falls back to the name initial. */
+  avatarUrl?: string;
 }

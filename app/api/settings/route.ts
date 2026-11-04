@@ -28,6 +28,9 @@ export async function PUT(req: Request) {
     }
     patch.waNumber = normalized;
   }
+  if (typeof body.avatarUrl === "string") {
+    patch.avatarUrl = body.avatarUrl.trim();
+  }
 
   const settings = await updateSettings(patch);
   revalidateTag("settings");

@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getListing, getListings, getSettings } from "@/lib/store";
 import { isAuthed } from "@/lib/guard";
-import { IS_STATIC } from "@/lib/asset";
+import { IS_STATIC, withBase } from "@/lib/asset";
 import { PhotoGallery } from "@/components/PhotoGallery";
 import { ShareButton } from "@/components/ShareButton";
 import { PropertyTabs } from "@/components/PropertyTabs";
@@ -242,8 +242,13 @@ export default async function ListingDetail({
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#141d30] to-[#070b16] text-base font-bold text-accent">
-                {agentName.slice(0, 1).toUpperCase()}
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-[#141d30] to-[#070b16] text-base font-bold text-accent">
+                {settings.avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={withBase(settings.avatarUrl)} alt={agentName} className="h-full w-full object-cover" />
+                ) : (
+                  agentName.slice(0, 1).toUpperCase()
+                )}
               </div>
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm font-bold">{agentName}</div>

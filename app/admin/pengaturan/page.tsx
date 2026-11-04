@@ -1,23 +1,28 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { IconArrowLeft, IconCheck } from "@/components/icons";
+import { useEffect, useRef, useState } from "react";
+import { IconArrowLeft, IconCheck, IconUpload, IconTrash } from "@/components/icons";
+import { compressImage } from "@/lib/image";
 
 export default function SettingsPage() {
   const router = useRouter();
   const [agentName, setAgentName] = useState("");
   const [waNumber, setWaNumber] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
+  const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
+  const fileInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetch("/api/settings")
       .then((r) => r.json())
       .then((d) => {
         setAgentName(d.settings?.agentName ?? "");
+        setAvatarUrl(d.settings?.avatarUrl ?? "");
         // Show the number in local form (0813…) for familiarity.
         const wa: string = d.settings?.waNumber ?? "";
         setWaNumber(wa.startsWith("62") ? "0" + wa.slice(2) : wa);
@@ -25,6 +30,24 @@ export default function SettingsPage() {
       .catch(() => setError("Gagal memuat pengaturan"))
       .finally(() => setLoading(false));
   }, []);
+
+  async function uploadPhoto(file: File) {
+    setError("");
+    setUploading(true);
+    try {
+      const blob = await compressImage(file, 512, 0.85);
+      const fd = new FormData();
+      fd.append("files", blob, "profil.jpg");
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      if (!res.ok) throw new Error("Gagal upload foto");
+      const d = await res.json();
+      setAvatarUrl(d.images?.[0]?.url ?? "");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Gagal upload foto");
+    } finally {
+      setUploading(false);
+    }
+  }
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
@@ -35,7 +58,7 @@ export default function SettingsPage() {
       const res = await fetch("/api/settings", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ agentName, waNumber }),
+        body: JSON.stringify({ agentName, waNumber, avatarUrl }),
       });
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
@@ -70,6 +93,48 @@ export default function SettingsPage() {
         </div>
       ) : (
         <form onSubmit={save} className="glass space-y-4 rounded-[26px] p-5">
+          <div>
+            <span className="mb-1.5 block text-xs font-medium text-[color:var(--muted)]">
+              Foto Profil
+            </span>
+            <div className="flex items-center gap-3">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-[#141d30] to-[#070b16] text-xl font-bold text-accent">
+                {avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={avatarUrl} alt="Foto profil" className="h-full w-full object-cover" />
+                ) : (
+                  (agentName || "F").slice(0, 1).toUpperCase()
+                )}
+              </div>
+              <input
+                ref={fileInput}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => e.target.files?.[0] && uploadPhoto(e.target.files[0])}
+              />
+              <button
+                type="button"
+                onClick={() => fileInput.current?.click()}
+                disabled={uploading}
+                className="press flex items-center gap-1.5 rounded-xl border border-line bg-surface/60 px-3 py-2 text-sm font-semibold disabled:opacity-60"
+              >
+                <IconUpload width={16} height={16} />
+                {uploading ? "Mengunggah…" : avatarUrl ? "Ganti foto" : "Unggah foto"}
+              </button>
+              {avatarUrl && (
+                <button
+                  type="button"
+                  onClick={() => setAvatarUrl("")}
+                  className="press flex h-9 w-9 items-center justify-center rounded-xl bg-red-50 text-red-600 dark:bg-red-600/15"
+                  aria-label="Hapus foto"
+                >
+                  <IconTrash width={16} height={16} />
+                </button>
+              )}
+            </div>
+          </div>
+
           <label className="block">
             <span className="mb-1 block text-xs font-medium text-[color:var(--muted)]">
               Nama Agen / Brand
