@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { revalidateTag, revalidatePath } from "next/cache";
 import { requireAdmin, isAuthed } from "@/lib/guard";
 import { getListing, updateListing, deleteListing } from "@/lib/store";
+import { warmEnrichmentCache } from "@/lib/enrich";
 
 function revalidateListing(id: string) {
   revalidateTag("listings");
@@ -50,6 +51,7 @@ export async function PUT(
   if (!listing) {
     return NextResponse.json({ error: "Tidak ditemukan" }, { status: 404 });
   }
+  await warmEnrichmentCache(listing);
   revalidateListing(id);
   return NextResponse.json({ listing });
 }

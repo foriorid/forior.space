@@ -109,6 +109,7 @@ const parsedSchema = z.object({
   address: zStr(),
   city: zStr(),
   facilities: z.array(z.string().catch("")).catch([]),
+  amenities: z.array(z.string().catch("")).catch([]),
 });
 
 export function hasApiKey(): boolean {
@@ -168,7 +169,8 @@ Keluarkan HANYA objek JSON valid (tanpa markdown, tanpa penjelasan) dengan field
 - furnished: "unfurnished" | "semi" | "full" | "" (kosong jika tidak jelas)
 - address: area/lokasi detail (contoh "Bintaro Sektor 9", "BSD City")
 - city: kota/kabupaten (contoh "Jakarta Selatan", "Tangerang Selatan"). Tebak dari area jika perlu.
-- facilities: array string fasilitas/keunggulan singkat (contoh ["Dekat tol", "Carport 2 mobil", "SHM"])
+- facilities: array string KEUNGGULAN/selling point properti (BUKAN fasilitas fisik gedung). Tulis Title Case (kapital tiap awal kata). Contoh: ["Dekat Tol", "Hadap Timur", "Tangan Pertama", "Bebas Banjir", "Siap Huni"]
+- amenities: array string FASILITAS FISIK gedung/apartemen. Contoh: ["Kolam Renang", "Gym", "Jogging Track", "Lift Pribadi", "Keamanan 24 Jam", "Taman"]. Kosongkan [] bila properti non-apartemen/tanpa fasilitas khusus.
 
 Aturan harga Indonesia: "M"/"miliar" = 1.000.000.000 ; "jt"/"juta" = 1.000.000 ; "rb"/"ribu" = 1.000.
 Contoh: "2,5M" -> 2500000000 ; "850jt" -> 850000000 ; "15 juta/bulan" -> price 15000000, priceUnit "per_bulan".
@@ -234,7 +236,18 @@ const LISTING_TOOL = {
       furnished: { type: "string", enum: ["unfurnished", "semi", "full", ""] },
       address: { type: "string" },
       city: { type: "string" },
-      facilities: { type: "array", items: { type: "string" } },
+      facilities: {
+        type: "array",
+        items: { type: "string" },
+        description:
+          "Keunggulan/selling point properti (BUKAN fasilitas fisik). Title Case. Contoh: 'Dekat Tol', 'Hadap Timur', 'Tangan Pertama', 'Bebas Banjir'.",
+      },
+      amenities: {
+        type: "array",
+        items: { type: "string" },
+        description:
+          "Fasilitas fisik gedung/apartemen. Contoh: 'Kolam Renang', 'Gym', 'Jogging Track', 'Lift Pribadi', 'Keamanan 24 Jam', 'Taman'.",
+      },
     },
     required: ["title", "description", "propertyType"],
   },
@@ -537,5 +550,6 @@ export function fallbackParse(message: string): ParsedListing {
     address: "",
     city,
     facilities: [],
+    amenities: [],
   };
 }

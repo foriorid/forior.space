@@ -7,6 +7,7 @@ import { IS_STATIC } from "@/lib/asset";
 import { PhotoGallery } from "@/components/PhotoGallery";
 import { ShareButton } from "@/components/ShareButton";
 import { NearbySection } from "@/components/NearbySection";
+import { AmenitiesSection } from "@/components/AmenitiesSection";
 import {
   IconArrowLeft,
   IconBed,
@@ -17,6 +18,7 @@ import {
   IconPin,
   IconWhatsApp,
   IconEdit,
+  IconCheck,
 } from "@/components/icons";
 import { formatArea, locationLabel } from "@/lib/format";
 import { resolvePricing, priceLines } from "@/lib/pricing";
@@ -62,6 +64,21 @@ const FURNISH_LABELS: Record<string, string> = {
   semi: "Semi Furnished",
   full: "Full Furnished",
 };
+
+/** Capitalise each word (keeps short connectors lowercase) for Keunggulan items. */
+function titleCase(s: string): string {
+  const small = new Set(["di", "dan", "yang", "untuk", "ke", "dari", "pada", "&"]);
+  return s
+    .replace(/\s+/g, " ")
+    .trim()
+    .split(" ")
+    .map((w, i) =>
+      i > 0 && small.has(w.toLowerCase())
+        ? w.toLowerCase()
+        : w.charAt(0).toUpperCase() + w.slice(1),
+    )
+    .join(" ");
+}
 
 export default async function ListingDetail({
   params,
@@ -214,21 +231,25 @@ export default async function ListingDetail({
             </div>
           )}
 
-          {/* Facilities */}
+          {/* Fasilitas Properti — building amenities with icons */}
+          <AmenitiesSection items={listing.amenities} />
+
+          {/* Keunggulan Properti — selling points */}
           {listing.facilities.length > 0 && (
             <div>
-              <h2 className="mb-2 text-base font-bold">Fasilitas & Keunggulan</h2>
-              <div className="flex flex-wrap gap-2">
+              <h2 className="mb-2 text-base font-bold">Keunggulan Properti</h2>
+              <div className="grid grid-cols-1 gap-x-4 gap-y-1.5 sm:grid-cols-2">
                 {listing.facilities.map((f, i) => (
-                  <span key={i} className="chip rounded-full px-3 py-1.5 text-sm">
-                    {f}
-                  </span>
+                  <div key={i} className="flex items-start gap-2 text-sm">
+                    <IconCheck width={16} height={16} className="mt-0.5 shrink-0 text-emerald-500" />
+                    <span>{titleCase(f)}</span>
+                  </div>
                 ))}
               </div>
             </div>
           )}
 
-          {/* Nearby access */}
+          {/* Lokasi & Tempat Sekitar */}
           <NearbySection items={listing.nearby} />
         </div>
 

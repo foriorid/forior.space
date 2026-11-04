@@ -103,6 +103,9 @@ export function ListingEditor({ existing }: { existing?: Listing }) {
   const [facilitiesText, setFacilitiesText] = useState(
     (existing?.facilities ?? []).join(", "),
   );
+  const [amenitiesText, setAmenitiesText] = useState(
+    (existing?.amenities ?? []).join(", "),
+  );
   const [nearbyText, setNearbyText] = useState(
     serializeNearby(existing?.nearby),
   );
@@ -110,7 +113,9 @@ export function ListingEditor({ existing }: { existing?: Listing }) {
   const [error, setError] = useState("");
   const [reprocessing, setReprocessing] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
-  const [buildingName, setBuildingName] = useState(existing?.title ?? "");
+  const [buildingName, setBuildingName] = useState(
+    existing?.building || existing?.title || "",
+  );
   const [enriching, setEnriching] = useState(false);
   const [enrichNote, setEnrichNote] = useState<string | null>(null);
   const [enrichError, setEnrichError] = useState<string | null>(null);
@@ -157,6 +162,7 @@ export function ListingEditor({ existing }: { existing?: Listing }) {
       const parsed = data.parsed as ParsedListing;
       setForm(toForm(parsed));
       setFacilitiesText((parsed.facilities ?? []).join(", "));
+      setAmenitiesText((parsed.amenities ?? []).join(", "));
       setNearbyText(serializeNearby(parsed.nearby));
       setImages(uploaded);
       setUsedAi(Boolean(data.usedAi));
@@ -191,6 +197,7 @@ export function ListingEditor({ existing }: { existing?: Listing }) {
       const parsed = data.parsed as ParsedListing;
       setForm(toForm(parsed));
       setFacilitiesText((parsed.facilities ?? []).join(", "));
+      setAmenitiesText((parsed.amenities ?? []).join(", "));
       setNearbyText(serializeNearby(parsed.nearby));
       setUsedAi(Boolean(data.usedAi));
       setAiError(data.aiError ?? null);
@@ -232,27 +239,27 @@ export function ListingEditor({ existing }: { existing?: Listing }) {
         setEnrichError(data.aiError);
         return;
       }
-      const facNew: string[] = data.facilities || [];
+      const amenNew: string[] = data.amenities || [];
       const nearNew: { category: string; name: string; time: string }[] =
         data.nearby || [];
-      if (facNew.length === 0 && nearNew.length === 0) {
+      if (amenNew.length === 0 && nearNew.length === 0) {
         setEnrichNote(
           "Tidak ada data ditemukan. Coba nama gedung yang lebih spesifik atau lengkapi kotanya.",
         );
         return;
       }
-      // Merge facilities (unique, case-insensitive).
-      const existingFac = facilitiesText
+      // Merge amenities / Fasilitas Properti (unique, case-insensitive).
+      const existingAmen = amenitiesText
         .split(",")
         .map((s) => s.trim())
         .filter(Boolean);
-      const mergedFac = [...existingFac];
-      for (const f of facNew) {
-        if (f.trim() && !mergedFac.some((x) => x.toLowerCase() === f.toLowerCase())) {
-          mergedFac.push(f.trim());
+      const mergedAmen = [...existingAmen];
+      for (const f of amenNew) {
+        if (f.trim() && !mergedAmen.some((x) => x.toLowerCase() === f.toLowerCase())) {
+          mergedAmen.push(f.trim());
         }
       }
-      setFacilitiesText(mergedFac.join(", "));
+      setAmenitiesText(mergedAmen.join(", "));
       // Merge nearby (dedupe by name).
       const existingNear = parseNearby(nearbyText);
       const merged = [...existingNear];
@@ -309,6 +316,11 @@ export function ListingEditor({ existing }: { existing?: Listing }) {
           .split(",")
           .map((s) => s.trim())
           .filter(Boolean),
+        amenities: amenitiesText
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean),
+        building: buildingName.trim(),
         nearby: parseNearby(nearbyText),
         images,
         rawMessage: message,
@@ -634,12 +646,21 @@ export function ListingEditor({ existing }: { existing?: Listing }) {
         </Field>
       </Section>
 
-      <Section title="Deskripsi & Fasilitas">
+      <Section title="Deskripsi & Keunggulan">
         <Field label="Deskripsi">
           <textarea value={form.description} onChange={(e) => set("description", e.target.value)} rows={5} className={inputCls} />
         </Field>
-        <Field label="Fasilitas (pisahkan dengan koma)" hint="cth: Dekat tol, Carport 2 mobil, SHM">
-          <input value={facilitiesText} onChange={(e) => setFacilitiesText(e.target.value)} className={inputCls} placeholder="Dekat tol, Carport, Security 24 jam" />
+        <Field
+          label="Keunggulan Properti (pisahkan koma)"
+          hint="selling point / pointer — cth: Dekat Tol, Hadap Timur, Tangan Pertama, Siap Huni"
+        >
+          <input value={facilitiesText} onChange={(e) => setFacilitiesText(e.target.value)} className={inputCls} placeholder="Dekat Tol, Hadap Timur, Bebas Banjir" />
+        </Field>
+        <Field
+          label="Fasilitas Properti (pisahkan koma)"
+          hint="fasilitas fisik gedung/apartemen — cth: Kolam Renang, Gym, Lift Pribadi"
+        >
+          <input value={amenitiesText} onChange={(e) => setAmenitiesText(e.target.value)} className={inputCls} placeholder="Kolam Renang, Gym, Jogging Track, Keamanan 24 Jam" />
         </Field>
       </Section>
 
@@ -684,7 +705,7 @@ export function ListingEditor({ existing }: { existing?: Listing }) {
         </p>
       </Section>
 
-      <Section title="Fasilitas Akses Sekitar">
+      <Section title="Lokasi & Tempat Sekitar">
         <Field
           label="Satu tempat per baris — format: Kategori | Nama | Waktu"
           hint="Kategori: Swalayan, Rumah Sakit, Sekolah, Transportasi, Kuliner, Ibadah, Rekreasi, Lainnya"

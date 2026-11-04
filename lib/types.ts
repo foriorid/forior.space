@@ -74,6 +74,10 @@ export interface Listing {
   rentUnit?: RentUnit;
   /** Nearby access/places, grouped & displayed on the detail page. */
   nearby?: NearbyPlace[];
+  /** Physical building/apartment amenities (pool, gym, …) shown with icons. */
+  amenities?: string[];
+  /** Canonical building/apartment name, used to reuse enrichment per building. */
+  building?: string;
   bedrooms: number | null;
   bathrooms: number | null;
   landArea: number | null; // m2
@@ -107,6 +111,7 @@ export type ParsedListing = Pick<
   | "rentPrice"
   | "rentUnit"
   | "nearby"
+  | "amenities"
   | "bedrooms"
   | "bathrooms"
   | "landArea"

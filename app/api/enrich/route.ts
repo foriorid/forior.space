@@ -28,10 +28,14 @@ export async function POST(req: Request) {
   // Cache-first: reuse a building we've already looked up (free, no web search).
   if (!forceRefresh) {
     const cached = await getEnrichment(key);
-    if (cached && (cached.facilities?.length || cached.nearby?.length)) {
+    // Back-compat: older rows stored "facilities" instead of "amenities".
+    const amenities =
+      cached?.amenities ?? (cached as { facilities?: string[] } | null)?.facilities ?? [];
+    const nearby = cached?.nearby ?? [];
+    if (amenities.length || nearby.length) {
       return NextResponse.json({
-        facilities: cached.facilities ?? [],
-        nearby: cached.nearby ?? [],
+        amenities,
+        nearby,
         cached: true,
         usedAi: true,
         aiError: null,
@@ -42,12 +46,12 @@ export async function POST(req: Request) {
   const result = await enrichPlace(building, city, hint);
 
   // Save only successful, non-empty lookups so the cache stays useful.
-  if (result.usedAi && (result.data.facilities.length || result.data.nearby.length)) {
+  if (result.usedAi && (result.data.amenities.length || result.data.nearby.length)) {
     await saveEnrichment(key, building, city, result.data);
   }
 
   return NextResponse.json({
-    facilities: result.data.facilities,
+    amenities: result.data.amenities,
     nearby: result.data.nearby,
     cached: false,
     usedAi: result.usedAi,

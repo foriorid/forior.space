@@ -47,6 +47,8 @@ export const listingInputSchema = z.object({
     )
     .optional()
     .default([]),
+  amenities: z.array(z.string()).optional().default([]),
+  building: z.string().optional().default(""),
   bedrooms: z.number().int().nullable().default(null),
   bathrooms: z.number().int().nullable().default(null),
   landArea: z.number().nullable().default(null),

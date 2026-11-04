@@ -3,6 +3,7 @@ import { revalidateTag, revalidatePath } from "next/cache";
 import { requireAdmin, isAuthed } from "@/lib/guard";
 import { getListings, createListing, type ListingFilter } from "@/lib/store";
 import { listingInputSchema } from "@/lib/validate";
+import { warmEnrichmentCache } from "@/lib/enrich";
 import type { ListingType, PropertyType } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -44,6 +45,7 @@ export async function POST(req: Request) {
   }
 
   const listing = await createListing(result.data);
+  await warmEnrichmentCache(listing);
   revalidateTag("listings");
   revalidatePath("/");
   revalidatePath("/cari");

@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
-import type { NearbyPlace } from "./types";
+import type { Listing, NearbyPlace } from "./types";
+import { saveEnrichment } from "./store";
 
 /**
  * Looks up a building's facilities and nearby places from the web, so an agent
@@ -11,7 +12,8 @@ import type { NearbyPlace } from "./types";
 const ENRICH_MODEL = process.env.ENRICH_MODEL || "claude-sonnet-5-5";
 
 export interface EnrichmentData {
-  facilities: string[];
+  /** Physical building/apartment amenities (pool, gym, …). */
+  amenities: string[];
   nearby: NearbyPlace[];
 }
 
@@ -22,7 +24,7 @@ export interface EnrichResult {
 }
 
 const enrichSchema = z.object({
-  facilities: z.array(z.string().catch("")).catch([]),
+  amenities: z.array(z.string().catch("")).catch([]),
   nearby: z
     .array(
       z
@@ -54,6 +56,26 @@ export function enrichKey(building: string, city: string): string {
   return `${slug(building)}|${slug(city || "")}`;
 }
 
+/**
+ * Warm the per-building cache from a saved listing's (agent-curated) data, so
+ * the next listing in the same building reuses it for free. Non-empty only, so
+ * a listing without amenities/nearby never clears a good cache entry.
+ */
+export async function warmEnrichmentCache(listing: Listing): Promise<void> {
+  const building = (listing.building || "").trim();
+  const amenities = listing.amenities ?? [];
+  const nearby = listing.nearby ?? [];
+  if (!building || (amenities.length === 0 && nearby.length === 0)) return;
+  try {
+    await saveEnrichment(enrichKey(building, listing.city), building, listing.city, {
+      amenities,
+      nearby,
+    });
+  } catch {
+    /* non-fatal */
+  }
+}
+
 export function hasApiKey(): boolean {
   return Boolean(process.env.ANTHROPIC_API_KEY);
 }
@@ -65,11 +87,11 @@ const ENRICH_TOOL = {
   input_schema: {
     type: "object" as const,
     properties: {
-      facilities: {
+      amenities: {
         type: "array",
         items: { type: "string" },
         description:
-          "Fasilitas di dalam gedung/apartemen (mis. Kolam renang, Gym, Mall, Keamanan 24 jam).",
+          "Fasilitas fisik di dalam gedung/apartemen, Title Case (mis. 'Kolam Renang', 'Gym', 'Jogging Track', 'Keamanan 24 Jam').",
       },
       nearby: {
         type: "array",
@@ -93,7 +115,7 @@ const ENRICH_TOOL = {
         },
       },
     },
-    required: ["facilities", "nearby"],
+    required: ["amenities", "nearby"],
   },
 };
 
@@ -109,7 +131,7 @@ export async function enrichPlace(
   city: string,
   hint = "",
 ): Promise<EnrichResult> {
-  const empty: EnrichmentData = { facilities: [], nearby: [] };
+  const empty: EnrichmentData = { amenities: [], nearby: [] };
   if (!hasApiKey()) return { data: empty, usedAi: false };
   if (!building.trim()) {
     return { data: empty, usedAi: false, error: "Nama gedung kosong" };
@@ -150,7 +172,7 @@ export async function enrichPlace(
         const parsed = enrichSchema.parse(saveBlock.input);
         // Drop empty names.
         parsed.nearby = parsed.nearby.filter((n) => n.name.trim());
-        parsed.facilities = parsed.facilities.filter((f) => f.trim());
+        parsed.amenities = parsed.amenities.filter((f) => f.trim());
         return { data: parsed, usedAi: true };
       }
 
