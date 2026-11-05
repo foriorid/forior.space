@@ -1,7 +1,8 @@
 /** Site-wide config, overridable via environment variables. */
 export const site = {
   name: process.env.NEXT_PUBLIC_SITE_NAME || "Forior Space",
-  domain: process.env.NEXT_PUBLIC_SITE_DOMAIN || "forior.space",
+  // Canonical host (served 200; apex forior.space redirects here).
+  domain: process.env.NEXT_PUBLIC_SITE_DOMAIN || "www.forior.space",
   tagline:
     process.env.NEXT_PUBLIC_SITE_TAGLINE ||
     "Properti pilihan di Jakarta, Tangsel & sekitarnya",

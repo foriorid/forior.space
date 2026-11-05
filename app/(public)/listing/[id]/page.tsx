@@ -21,7 +21,7 @@ import {
 import { formatArea, locationLabel } from "@/lib/format";
 import { resolvePricing, priceLines } from "@/lib/pricing";
 import { PROPERTY_TYPE_LABELS } from "@/lib/types";
-import { waLinkWith, toLocalPhone } from "@/lib/site";
+import { waLinkWith, toLocalPhone, site } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
@@ -40,11 +40,27 @@ export async function generateMetadata({
   const { id } = await params;
   const listing = await getListing(id);
   if (!listing) return { title: "Properti tidak ditemukan" };
+  const p = resolvePricing(listing);
+  const status = [p.forSale && "Dijual", p.forRent && "Disewa"].filter(Boolean).join(" / ");
+  const loc = locationLabel(listing);
+  const prices = priceLines(p).map((l) => l.value).join(" / ");
+  const desc = `${status} ${PROPERTY_TYPE_LABELS[listing.propertyType]}${loc ? ` di ${loc}` : ""}${
+    prices ? ` — ${prices}` : ""
+  }. ${listing.description}`
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 160);
+  const image = listing.images[0]?.url;
   return {
     title: listing.title,
-    description: listing.description.slice(0, 160),
+    description: desc,
     alternates: { canonical: `/listing/${id}` },
-    openGraph: { images: listing.images[0] ? [listing.images[0].url] : [] },
+    openGraph: {
+      title: listing.title,
+      description: desc,
+      images: image ? [image] : [],
+      type: "website",
+    },
   };
 }
 
@@ -83,6 +99,29 @@ export default async function ListingDetail({
   const pricing = resolvePricing(listing);
   const lines = priceLines(pricing);
 
+  // SEO structured data (schema.org) — helps Google show price/photos.
+  const canonical = `https://${site.domain}/listing/${listing.id}`;
+  const absUrl = (u: string) => (u.startsWith("http") ? u : `https://${site.domain}${u}`);
+  const primaryPrice = pricing.forSale ? pricing.salePrice : pricing.rentPrice;
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: listing.title,
+    description: listing.description.slice(0, 500),
+    image: listing.images.map((i) => absUrl(i.url)),
+    category: PROPERTY_TYPE_LABELS[listing.propertyType],
+    url: canonical,
+    ...(primaryPrice != null && {
+      offers: {
+        "@type": "Offer",
+        price: primaryPrice,
+        priceCurrency: "IDR",
+        availability: "https://schema.org/InStock",
+        url: canonical,
+      },
+    }),
+  };
+
   const specs = [
     listing.bedrooms != null && { icon: IconBed, label: "Kamar Tidur", value: String(listing.bedrooms) },
     listing.bathrooms != null && { icon: IconBath, label: "Kamar Mandi", value: String(listing.bathrooms) },
@@ -100,6 +139,10 @@ export default async function ListingDetail({
 
   return (
     <div className="space-y-6">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Gallery */}
       <div className="relative">
         <PhotoGallery images={listing.images} title={listing.title} />
