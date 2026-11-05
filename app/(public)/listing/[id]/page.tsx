@@ -43,6 +43,7 @@ export async function generateMetadata({
   return {
     title: listing.title,
     description: listing.description.slice(0, 160),
+    alternates: { canonical: `/listing/${id}` },
     openGraph: { images: listing.images[0] ? [listing.images[0].url] : [] },
   };
 }
