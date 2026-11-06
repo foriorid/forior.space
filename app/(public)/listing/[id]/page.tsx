@@ -7,6 +7,7 @@ import { IS_STATIC, withBase } from "@/lib/asset";
 import { PhotoGallery } from "@/components/PhotoGallery";
 import { ShareButton } from "@/components/ShareButton";
 import { PropertyTabs } from "@/components/PropertyTabs";
+import { ListingCard } from "@/components/ListingCard";
 import {
   IconArrowLeft,
   IconBed,
@@ -136,6 +137,21 @@ export default async function ListingDetail({
     priceSummary ? ` (${priceSummary})` : ""
   }. Apakah masih tersedia?`;
   const waHref = waLinkWith(settings.waNumber, waMessage);
+  const ownerHref = waLinkWith(
+    settings.waNumber,
+    `Halo ${agentName}, saya ingin menitipkan properti untuk dijual/disewa. Boleh info caranya?`,
+  );
+
+  // 3 related listings — same city/type ranked first.
+  const related = (await getListings({ status: "published" }))
+    .filter((l) => l.id !== listing.id)
+    .map((l) => ({
+      l,
+      s: (l.city === listing.city ? 2 : 0) + (l.propertyType === listing.propertyType ? 1 : 0),
+    }))
+    .sort((a, b) => b.s - a.s)
+    .slice(0, 3)
+    .map((x) => x.l);
 
   return (
     <div className="space-y-6">
@@ -313,8 +329,36 @@ export default async function ListingDetail({
               Diposting oleh {agentName}
             </p>
           </div>
+
+          {/* Owner CTA — entrust a property */}
+          <div className="glass mt-4 rounded-[26px] p-5">
+            <div className="text-sm font-bold">Punya properti untuk dijual/disewa?</div>
+            <p className="mt-1 text-xs text-[color:var(--muted)]">
+              Titipkan properti Anda ke {agentName} — kami bantu pasarkan.
+            </p>
+            <a
+              href={ownerHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="press mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border border-line bg-surface/60 py-3 text-sm font-bold"
+            >
+              <IconWhatsApp width={18} height={18} /> Titip Properti
+            </a>
+          </div>
         </div>
       </div>
+
+      {/* Related properties */}
+      {related.length > 0 && (
+        <section>
+          <h2 className="mb-3 text-lg font-bold">Properti Terkait</h2>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {related.map((l) => (
+              <ListingCard key={l.id} listing={l} />
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BottomNav } from "@/components/BottomNav";
+import { Footer } from "@/components/Footer";
 import { site } from "@/lib/site";
 import { withBase, IS_STATIC } from "@/lib/asset";
 
@@ -34,8 +35,9 @@ export default function PublicLayout({
         )}
       </header>
 
-      <main className="px-4 pb-32 pt-4 md:px-6">{children}</main>
+      <main className="px-4 pt-4 md:px-6">{children}</main>
 
+      <Footer />
       <BottomNav />
     </div>
   );
