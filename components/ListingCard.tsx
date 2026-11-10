@@ -6,7 +6,7 @@ import { resolvePricing, priceLines } from "@/lib/pricing";
 import { BlurImage } from "./BlurImage";
 import { IconBed, IconBath, IconRuler, IconLand, IconPin } from "./icons";
 
-export function ListingCard({ listing }: { listing: Listing }) {
+export function ListingCard({ listing, prefetch }: { listing: Listing; prefetch?: boolean }) {
   const cover = listing.images[0]?.url;
   const pricing = resolvePricing(listing);
   const lines = priceLines(pricing);
@@ -15,6 +15,7 @@ export function ListingCard({ listing }: { listing: Listing }) {
   return (
     <Link
       href={`/listing/${listing.id}`}
+      prefetch={prefetch}
       className="press group block overflow-hidden rounded-[26px] glass"
     >
       <div className="relative m-1.5 aspect-[16/11] overflow-hidden rounded-[20px] bg-slate-300/40">
