@@ -44,6 +44,8 @@ export function PhotoCarousel({
             key={i}
             src={withBase(img.url)}
             alt={`${title} — foto ${i + 1}`}
+            loading={i === 0 ? "eager" : "lazy"}
+            decoding="async"
             onClick={onPhotoClick ? () => onPhotoClick(i) : undefined}
             className={`h-full w-full shrink-0 snap-center object-cover ${
               onPhotoClick ? "cursor-zoom-in" : ""

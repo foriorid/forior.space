@@ -86,7 +86,7 @@ export function PhotoGallery({
           >
             {images[0] ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={withBase(images[0].url)} alt={title} className="h-full w-full object-cover" />
+              <img src={withBase(images[0].url)} alt={title} decoding="async" className="h-full w-full object-cover" />
             ) : (
               <span className="flex h-full w-full items-center justify-center text-[color:var(--muted)]">
                 Tanpa foto
@@ -103,6 +103,7 @@ export function PhotoGallery({
               <img
                 src={withBase(images[0].url)}
                 alt={title}
+                decoding="async"
                 className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
               />
             </button>
@@ -125,6 +126,8 @@ export function PhotoGallery({
                     <img
                       src={withBase(img.url)}
                       alt={`${title} ${idx + 1}`}
+                      loading="lazy"
+                      decoding="async"
                       className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
                     />
                     {showOverlay && (
@@ -170,6 +173,8 @@ export function PhotoGallery({
                 <img
                   src={withBase(img.url)}
                   alt={`${title} ${i + 1}`}
+                  loading="lazy"
+                  decoding="async"
                   className="max-h-full max-w-full rounded-2xl object-contain"
                 />
               </div>
