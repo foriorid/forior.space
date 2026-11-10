@@ -338,23 +338,24 @@ export default async function ListingDetail({
         </div>
       </div>
 
-      {/* Owner CTA band — entrust a property */}
-      <section className="glass flex flex-col items-start gap-4 rounded-[26px] p-6 sm:flex-row sm:items-center sm:justify-between">
-        <div>
+      {/* Owner CTA — entrust a property (aligned with body column width on desktop) */}
+      <div className="lg:grid lg:grid-cols-3 lg:gap-6">
+        <section className="glass rounded-[26px] p-5 lg:col-span-2">
           <div className="text-base font-bold">Punya properti untuk dijual/disewa?</div>
           <p className="mt-1 text-sm text-[color:var(--muted)]">
-            Titipkan properti Anda ke {agentName} — kami bantu pasarkan.
+            Titipkan properti Anda ke {agentName} — kami bantu pasarkan. Tanpa biaya
+            apa pun di awal; komisi hanya saat properti berhasil terjual atau tersewa.
           </p>
-        </div>
-        <a
-          href={ownerHref}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="btn-accent press flex shrink-0 items-center gap-2 rounded-2xl px-5 py-3 text-sm font-bold"
-        >
-          <IconWhatsApp width={18} height={18} /> Titip Properti
-        </a>
-      </section>
+          <a
+            href={ownerHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-accent press mt-4 inline-flex items-center gap-2 rounded-2xl px-5 py-3 text-sm font-bold"
+          >
+            <IconWhatsApp width={18} height={18} /> Titip Properti
+          </a>
+        </section>
+      </div>
 
       {/* Related properties */}
       {related.length > 0 && (

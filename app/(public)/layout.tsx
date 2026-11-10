@@ -18,7 +18,7 @@ export default async function PublicLayout({
   );
 
   return (
-    <div className="mx-auto min-h-dvh w-full max-w-md md:max-w-4xl lg:max-w-6xl xl:max-w-[1600px]">
+    <div className="mx-auto min-h-dvh w-full max-w-md md:max-w-4xl lg:max-w-[1190px]">
       <header className="relative z-30 px-4 pt-safe md:px-6">
         <div className="mt-3 flex h-14 items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
