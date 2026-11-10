@@ -10,7 +10,7 @@ import {
   IconLandscape,
 } from "@/components/icons";
 import { site } from "@/lib/site";
-import { withBase } from "@/lib/asset";
+import { BlurImage } from "@/components/BlurImage";
 import { PROPERTY_TYPE_LABELS, type PropertyType } from "@/lib/types";
 
 // Cached/edge-served; refreshed on write via revalidatePath("/").
@@ -32,8 +32,7 @@ export default async function HomePage() {
       {/* Hero — background image + dark-green overlay */}
       <section className="animate-fade-up relative flex min-h-[260px] items-end overflow-hidden rounded-[28px] p-6 shadow-lg sm:min-h-[360px] sm:p-10">
         {heroImg && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={withBase(heroImg)} alt="" className="absolute inset-0 h-full w-full object-cover" />
+          <BlurImage src={heroImg} alt="" eager className="absolute inset-0 h-full w-full object-cover" />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-[#06130c]/90 via-[#0b2317]/70 to-[#0b2317]/55" />
         <div className="relative w-full text-white">

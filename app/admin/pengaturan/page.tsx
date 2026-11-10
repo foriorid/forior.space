@@ -17,6 +17,45 @@ export default function SettingsPage() {
   const [error, setError] = useState("");
   const fileInput = useRef<HTMLInputElement>(null);
 
+  // One-off: re-compress existing listing photos to WebP (loops until done).
+  const [reopt, setReopt] = useState<{
+    running: boolean;
+    optimized: number;
+    saved: number;
+    done: boolean;
+    error?: string;
+  } | null>(null);
+
+  async function reoptimize() {
+    let optimized = 0;
+    let saved = 0;
+    setReopt({ running: true, optimized, saved, done: false });
+    try {
+      for (let i = 0; i < 300; i++) {
+        const res = await fetch("/api/admin/reoptimize", { method: "POST" });
+        if (!res.ok) {
+          const d = await res.json().catch(() => ({}));
+          throw new Error(d.error || "Gagal mengoptimalkan");
+        }
+        const d = await res.json();
+        optimized += d.optimized;
+        saved += d.savedBytes;
+        setReopt({ running: !d.done, optimized, saved, done: d.done });
+        // Stop when finished, or when a batch made no further progress.
+        if (d.done || d.processed === 0 || d.optimized === 0) break;
+      }
+      setReopt((r) => (r ? { ...r, running: false, done: true } : null));
+    } catch (err) {
+      setReopt({
+        running: false,
+        optimized,
+        saved,
+        done: false,
+        error: err instanceof Error ? err.message : "Gagal mengoptimalkan",
+      });
+    }
+  }
+
   useEffect(() => {
     fetch("/api/settings")
       .then((r) => r.json())
@@ -179,6 +218,37 @@ export default function SettingsPage() {
           </button>
         </form>
       )}
+
+      {/* Maintenance: shrink existing listing photos for faster loading */}
+      <div className="glass space-y-3 rounded-[26px] p-5">
+        <div>
+          <div className="text-sm font-bold">Optimalkan Foto Lama</div>
+          <p className="mt-1 text-xs text-[color:var(--muted)]">
+            Kompres ulang semua foto listing yang sudah terunggah ke format WebP
+            agar lebih ringan dibuka di koneksi lambat. Aman dijalankan berkali-kali.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={reoptimize}
+          disabled={reopt?.running}
+          className="press flex items-center gap-1.5 rounded-xl border border-line bg-surface/60 px-3.5 py-2.5 text-sm font-semibold disabled:opacity-60"
+        >
+          {reopt?.running ? "Mengoptimalkan…" : "Optimalkan Sekarang"}
+        </button>
+
+        {reopt && !reopt.error && (
+          <p className="text-xs font-medium text-[color:var(--muted)]">
+            {reopt.optimized} foto dioptimalkan
+            {reopt.saved > 0 && ` · hemat ${(reopt.saved / 1024 / 1024).toFixed(1)} MB`}
+            {reopt.done && !reopt.running && " · selesai ✓"}
+          </p>
+        )}
+        {reopt?.error && (
+          <p className="text-xs font-medium text-red-600">{reopt.error}</p>
+        )}
+      </div>
     </div>
   );
 }

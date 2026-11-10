@@ -3,7 +3,7 @@ import type { Listing } from "@/lib/types";
 import { PROPERTY_TYPE_LABELS } from "@/lib/types";
 import { formatArea, locationLabel } from "@/lib/format";
 import { resolvePricing, priceLines } from "@/lib/pricing";
-import { withBase } from "@/lib/asset";
+import { BlurImage } from "./BlurImage";
 import { IconBed, IconBath, IconRuler, IconLand, IconPin } from "./icons";
 
 export function ListingCard({ listing }: { listing: Listing }) {
@@ -19,12 +19,10 @@ export function ListingCard({ listing }: { listing: Listing }) {
     >
       <div className="relative m-1.5 aspect-[16/11] overflow-hidden rounded-[20px] bg-slate-300/40">
         {cover ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={withBase(cover)}
+          <BlurImage
+            src={cover}
             alt={listing.title}
-            loading="lazy"
-            className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+            className="h-full w-full object-cover group-hover:scale-105"
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center text-[color:var(--muted)]">

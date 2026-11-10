@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { withBase } from "@/lib/asset";
+import { BlurImage } from "./BlurImage";
 
 export function PhotoCarousel({
   images,
@@ -39,13 +39,11 @@ export function PhotoCarousel({
         className="no-scrollbar flex aspect-[4/3] w-full snap-x snap-mandatory overflow-x-auto"
       >
         {images.map((img, i) => (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <BlurImage
             key={i}
-            src={withBase(img.url)}
+            src={img.url}
             alt={`${title} — foto ${i + 1}`}
-            loading={i === 0 ? "eager" : "lazy"}
-            decoding="async"
+            eager={i === 0}
             onClick={onPhotoClick ? () => onPhotoClick(i) : undefined}
             className={`h-full w-full shrink-0 snap-center object-cover ${
               onPhotoClick ? "cursor-zoom-in" : ""

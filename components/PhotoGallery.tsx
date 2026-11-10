@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { withBase } from "@/lib/asset";
+import { BlurImage } from "./BlurImage";
 import { PhotoCarousel } from "./PhotoCarousel";
 
 /**
@@ -85,8 +85,7 @@ export function PhotoGallery({
             className="block h-[440px] w-full overflow-hidden rounded-[24px] bg-slate-300/40"
           >
             {images[0] ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={withBase(images[0].url)} alt={title} decoding="async" className="h-full w-full object-cover" />
+              <BlurImage src={images[0].url} alt={title} eager className="h-full w-full object-cover" />
             ) : (
               <span className="flex h-full w-full items-center justify-center text-[color:var(--muted)]">
                 Tanpa foto
@@ -99,12 +98,11 @@ export function PhotoGallery({
               onClick={() => openAt(0)}
               className="group h-full flex-1 overflow-hidden rounded-2xl bg-slate-300/40"
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={withBase(images[0].url)}
+              <BlurImage
+                src={images[0].url}
                 alt={title}
-                decoding="async"
-                className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
+                eager
+                className="h-full w-full object-cover group-hover:scale-[1.03]"
               />
             </button>
             <div
@@ -122,13 +120,10 @@ export function PhotoGallery({
                     onClick={() => openAt(idx)}
                     className="group relative overflow-hidden rounded-2xl bg-slate-300/40"
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={withBase(img.url)}
+                    <BlurImage
+                      src={img.url}
                       alt={`${title} ${idx + 1}`}
-                      loading="lazy"
-                      decoding="async"
-                      className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
+                      className="h-full w-full object-cover group-hover:scale-[1.03]"
                     />
                     {showOverlay && (
                       <span className="absolute inset-0 flex flex-col items-center justify-center bg-black/55 text-white backdrop-blur-sm">
@@ -169,12 +164,9 @@ export function PhotoGallery({
                 key={i}
                 className="flex h-full w-full shrink-0 snap-center items-center justify-center p-3"
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={withBase(img.url)}
+                <BlurImage
+                  src={img.url}
                   alt={`${title} ${i + 1}`}
-                  loading="lazy"
-                  decoding="async"
                   className="max-h-full max-w-full rounded-2xl object-contain"
                 />
               </div>
