@@ -4,14 +4,10 @@
       <stop offset="0" stop-color="#121a2c"/>
       <stop offset="1" stop-color="#070b16"/>
     </linearGradient>
-    <radialGradient id="planet" cx="0.38" cy="0.34" r="0.75">
-      <stop offset="0" stop-color="#e4ff7a"/>
-      <stop offset="0.55" stop-color="#c2f24a"/>
-      <stop offset="1" stop-color="#8fbf1f"/>
-    </radialGradient>
   </defs>
   <rect width="512" height="512" rx="120" fill="url(#bg)"/>
-  <ellipse cx="256" cy="262" rx="176" ry="60" fill="none" stroke="#c2f24a" stroke-width="12" opacity="0.55" transform="rotate(-24 256 262)"/>
-  <circle cx="256" cy="248" r="104" fill="url(#planet)"/>
-  <ellipse cx="222" cy="214" rx="34" ry="22" fill="#ffffff" opacity="0.35"/>
+  <!-- Modern minimalist house -->
+  <polygon points="256,142 410,262 102,262" fill="#c2f24a"/>
+  <rect x="150" y="248" width="212" height="126" rx="18" fill="#c2f24a"/>
+  <rect x="226" y="306" width="60" height="68" rx="10" fill="#0a0f1a"/>
 </svg>

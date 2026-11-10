@@ -1,14 +1,22 @@
 import Link from "next/link";
 import { BottomNav } from "@/components/BottomNav";
 import { Footer } from "@/components/Footer";
-import { site } from "@/lib/site";
+import { IconWhatsApp } from "@/components/icons";
+import { getSettings } from "@/lib/store";
+import { site, waLinkWith } from "@/lib/site";
 import { withBase, IS_STATIC } from "@/lib/asset";
 
-export default function PublicLayout({
+export default async function PublicLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const settings = await getSettings();
+  const hubungiHref = waLinkWith(
+    settings.waNumber,
+    `Halo ${settings.agentName}, saya ingin bertanya soal properti.`,
+  );
+
   return (
     <div className="mx-auto min-h-dvh w-full max-w-md md:max-w-3xl lg:max-w-5xl">
       <header className="sticky top-0 z-30 px-4 pt-safe md:px-6">
@@ -18,14 +26,14 @@ export default function PublicLayout({
             <img src={withBase("/icon.svg")} alt="" width={30} height={30} className="rounded-xl" />
             <span className="text-[17px] font-bold tracking-tight">{site.name}</span>
           </Link>
-          {!IS_STATIC && (
-            <Link
-              href="/admin"
-              className="press rounded-full border border-line bg-surface/60 px-3.5 py-1.5 text-xs font-semibold"
-            >
-              Agen
-            </Link>
-          )}
+          <a
+            href={hubungiHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="press flex items-center gap-1.5 rounded-full border border-line bg-surface/60 px-3.5 py-1.5 text-xs font-semibold"
+          >
+            <IconWhatsApp width={14} height={14} /> Hubungi
+          </a>
         </div>
         {IS_STATIC && (
           <div className="mt-2 px-1 text-[11px] leading-tight text-[color:var(--muted)]">

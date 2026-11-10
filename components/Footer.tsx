@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getSettings } from "@/lib/store";
 import { site, waLinkWith } from "@/lib/site";
-import { withBase } from "@/lib/asset";
+import { withBase, IS_STATIC } from "@/lib/asset";
 import { IconWhatsApp } from "./icons";
 
 export async function Footer() {
@@ -33,6 +33,11 @@ export async function Footer() {
           >
             <IconWhatsApp width={16} height={16} /> WhatsApp
           </a>
+          {!IS_STATIC && (
+            <Link href="/admin" className="press text-[color:var(--muted)]">
+              Agen / Login
+            </Link>
+          )}
         </div>
 
         <div className="mt-5 border-t border-line pt-4 text-xs text-[color:var(--muted)]">
