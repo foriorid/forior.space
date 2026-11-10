@@ -14,7 +14,7 @@ export default async function AdminLayout({
   if (!(await isAuthed())) redirect("/masuk?next=/admin");
 
   return (
-    <div className="mx-auto min-h-dvh w-full max-w-md md:max-w-3xl lg:max-w-4xl">
+    <div className="mx-auto min-h-dvh w-full max-w-md md:max-w-3xl lg:max-w-[1200px]">
       <header className="sticky top-0 z-30 px-4 pt-safe md:px-6">
         <div className="glass mt-3 flex h-14 items-center justify-between rounded-2xl px-3">
           <span className="text-lg font-extrabold">Dashboard Agen</span>
