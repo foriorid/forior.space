@@ -18,19 +18,19 @@ export default async function PublicLayout({
   );
 
   return (
-    <div className="mx-auto min-h-dvh w-full max-w-md md:max-w-3xl lg:max-w-5xl">
-      <header className="sticky top-0 z-30 px-4 pt-safe md:px-6">
-        <div className="glass mt-3 flex h-14 items-center justify-between rounded-2xl px-3">
+    <div className="mx-auto min-h-dvh w-full max-w-md md:max-w-4xl lg:max-w-6xl xl:max-w-[1600px]">
+      <header className="relative z-30 px-4 pt-safe md:px-6">
+        <div className="mt-3 flex h-14 items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={withBase("/icon.svg")} alt="" width={30} height={30} className="rounded-xl" />
-            <span className="text-[17px] font-bold tracking-tight">{site.name}</span>
+            <img src={withBase("/icon.svg")} alt="" width={32} height={32} className="rounded-xl" />
+            <span className="text-[18px] font-bold tracking-tight">{site.name}</span>
           </Link>
           <a
             href={hubungiHref}
             target="_blank"
             rel="noopener noreferrer"
-            className="press flex items-center gap-1.5 rounded-full border border-line bg-surface/60 px-3.5 py-1.5 text-xs font-semibold"
+            className="press flex items-center gap-1.5 rounded-full border border-line bg-surface/70 px-3.5 py-1.5 text-xs font-semibold backdrop-blur-sm"
           >
             <IconWhatsApp width={14} height={14} /> Hubungi
           </a>

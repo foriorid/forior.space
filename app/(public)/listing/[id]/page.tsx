@@ -8,6 +8,7 @@ import { PhotoGallery } from "@/components/PhotoGallery";
 import { ShareButton } from "@/components/ShareButton";
 import { PropertyTabs } from "@/components/PropertyTabs";
 import { ListingCard } from "@/components/ListingCard";
+import { KprCalculator } from "@/components/KprCalculator";
 import {
   IconArrowLeft,
   IconBed,
@@ -330,23 +331,30 @@ export default async function ListingDetail({
             </p>
           </div>
 
-          {/* Owner CTA — entrust a property */}
-          <div className="glass mt-4 rounded-[26px] p-5">
-            <div className="text-sm font-bold">Punya properti untuk dijual/disewa?</div>
-            <p className="mt-1 text-xs text-[color:var(--muted)]">
-              Titipkan properti Anda ke {agentName} — kami bantu pasarkan.
-            </p>
-            <a
-              href={ownerHref}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="press mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border border-line bg-surface/60 py-3 text-sm font-bold"
-            >
-              <IconWhatsApp width={18} height={18} /> Titip Properti
-            </a>
-          </div>
+          {/* KPR calculator — only for sellable listings */}
+          {pricing.forSale && pricing.salePrice ? (
+            <KprCalculator price={pricing.salePrice} />
+          ) : null}
         </div>
       </div>
+
+      {/* Owner CTA band — entrust a property */}
+      <section className="glass flex flex-col items-start gap-4 rounded-[26px] p-6 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <div className="text-base font-bold">Punya properti untuk dijual/disewa?</div>
+          <p className="mt-1 text-sm text-[color:var(--muted)]">
+            Titipkan properti Anda ke {agentName} — kami bantu pasarkan.
+          </p>
+        </div>
+        <a
+          href={ownerHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn-accent press flex shrink-0 items-center gap-2 rounded-2xl px-5 py-3 text-sm font-bold"
+        >
+          <IconWhatsApp width={18} height={18} /> Titip Properti
+        </a>
+      </section>
 
       {/* Related properties */}
       {related.length > 0 && (

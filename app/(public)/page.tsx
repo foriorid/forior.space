@@ -10,6 +10,7 @@ import {
   IconLandscape,
 } from "@/components/icons";
 import { site } from "@/lib/site";
+import { withBase } from "@/lib/asset";
 import { PROPERTY_TYPE_LABELS, type PropertyType } from "@/lib/types";
 
 // Cached/edge-served; refreshed on write via revalidatePath("/").
@@ -24,16 +25,20 @@ const CATEGORIES: { type: PropertyType; Icon: ComponentType<SVGProps<SVGSVGEleme
 
 export default async function HomePage() {
   const listings = await getListings({ status: "published" });
+  const heroImg = listings.find((l) => l.images[0])?.images[0]?.url;
 
   return (
     <div className="space-y-6">
-      {/* Hero — bright */}
-      <section className="animate-fade-up relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[#e8f8c7] via-[#f3f8ea] to-[#e6edfb] p-5 shadow-lg ring-1 ring-black/5">
-        <div className="pointer-events-none absolute -right-10 -top-12 h-40 w-40 rounded-full bg-accent/50 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-16 -left-8 h-40 w-40 rounded-full bg-violet/25 blur-3xl" />
-        <div className="relative text-[#0d1220]">
-          <p className="text-sm font-medium text-[#0d1220]/60">Halo! 👋</p>
-          <h1 className="mt-1 text-[26px] font-bold leading-tight">
+      {/* Hero — background image + dark-green overlay */}
+      <section className="animate-fade-up relative flex min-h-[260px] items-end overflow-hidden rounded-[28px] p-6 shadow-lg sm:min-h-[360px] sm:p-10">
+        {heroImg && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={withBase(heroImg)} alt="" className="absolute inset-0 h-full w-full object-cover" />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#06130c]/90 via-[#0b2317]/70 to-[#0b2317]/55" />
+        <div className="relative w-full text-white">
+          <p className="text-sm font-medium text-white/70">Halo! 👋</p>
+          <h1 className="mt-1 text-[28px] font-bold leading-tight sm:text-[40px]">
             Temukan{" "}
             <span className="relative inline-block">
               <span className="relative z-10">ruang</span>
@@ -41,10 +46,10 @@ export default async function HomePage() {
             </span>{" "}
             terbaikmu
           </h1>
-          <p className="mt-1.5 text-sm text-[#0d1220]/60">{site.tagline}</p>
+          <p className="mt-2 text-sm text-white/80 sm:text-base">{site.tagline}</p>
           <Link
             href="/cari"
-            className="press mt-4 flex items-center gap-2 rounded-2xl border border-black/10 bg-white/85 px-4 py-3 text-sm font-medium text-[#0d1220]/55 shadow-sm backdrop-blur-md"
+            className="press mt-5 flex items-center gap-2 rounded-2xl bg-white px-4 py-3.5 text-sm font-medium text-[#0d1220]/55 shadow-lg sm:max-w-xl"
           >
             <IconSearch width={18} height={18} />
             Cari lokasi, tipe, atau harga…
