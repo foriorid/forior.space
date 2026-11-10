@@ -13,6 +13,9 @@ const nextConfig: NextConfig = isStatic
     }
   : {
       // Normal server build (full app: AI parsing, auth, uploads, etc.)
+      // Keep sharp external so its native linux-x64 binary is traced into the
+      // serverless function (otherwise it fails to load at runtime).
+      serverExternalPackages: ["sharp"],
     };
 
 export default nextConfig;
